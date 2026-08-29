@@ -1,0 +1,65 @@
+[
+    {
+        "participants": { "min": 49 },
+        "points": [
+            { "place": { "min": 1, "points": 28 } },
+            { "place": { "min": 2, "points": 21 } },
+            { "place": { "min": 3, "points": 16 } },
+            { "place": { "min": 4, "points": 13 } },
+            { "place": { "min": 5, "points": 10 } },
+            { "place": { "min": 9, "points": 6 } },
+            { "place": { "min": 17, "points": 4 } },
+            { "place": { "min": 25, "points": 3 } },
+            { "place": { "min": 33, "points": 2 } },
+            { "place": { "min": 49, "points": 1 } }
+        ]
+    },
+    {
+        "participants": { "min": 33 },
+        "points": [
+            { "place": { "min": 1, "points": 21 } },
+            { "place": { "min": 2, "points": 16 } },
+            { "place": { "min": 3, "points": 13 } },
+            { "place": { "min": 4, "points": 10 } },
+            { "place": { "min": 5, "points": 6 } },
+            { "place": { "min": 9, "points": 4 } },
+            { "place": { "min": 17, "points": 3 } },
+            { "place": { "min": 25, "points": 2 } },
+            { "place": { "min": 33, "points": 1 } },
+            { "place": { "min": 49, "points": 0 } }
+        ]
+    },
+    {
+        "participants": { "min": 25 },
+        "points": [
+            { "place": { "min": 1, "points": 16 } },
+            { "place": { "min": 2, "points": 13 } },
+            { "place": { "min": 3, "points": 10 } },
+            { "place": { "min": 4, "points": 6 } },
+            { "place": { "min": 5, "points": 4 } },
+            { "place": { "min": 9, "points": 3 } },
+            { "place": { "min": 17, "points": 2 } },
+            { "place": { "min": 25, "points": 1 } },
+            { "place": { "min": 33, "points": 0 } }
+        ]
+    },
+    {
+        "participants": { "min": 5 },
+        "points": [
+            { "place": { "min": 1, "points": 13 } },
+            { "place": { "min": 2, "points": 10 } },
+            { "place": { "min": 3, "points": 6 } },
+            { "place": { "min": 4, "points": 4 } },
+            { "place": { "min": 5, "points": 3 } },
+            { "place": { "min": 9, "points": 2 } },
+            { "place": { "min": 17, "points": 1 } },
+            { "place": { "min": 25, "points": 0 } }
+        ]
+    },
+    {
+        "participants": { "min": 0 },
+        "points": [
+            { "place": { "min": 1, "points": 0 } }
+        ]
+    }
+]

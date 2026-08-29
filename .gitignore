@@ -18,7 +18,10 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/exchange/*
+!/storage/exchange/README.md
 /vendor
 Homestead.json
 Homestead.yaml
 Thumbs.db
+/test.http

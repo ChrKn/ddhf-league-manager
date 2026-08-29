@@ -1,0 +1,120 @@
+[
+    {
+        "participants": { "min": 49 },
+        "pools": 1,
+        "points": [
+            { "place": { "min": 1, "points": 26 } },
+            { "place": { "min": 2, "points": 22 } },
+            { "place": { "min": 3, "points": 18 } },
+            { "place": { "min": 4, "points": 15 } },
+            { "place": { "min": 5, "points": 12 }, "round": "last-6" },
+            { "place": { "min": 7, "points": 10 }, "round": "last-8" },
+            { "place": { "min": 9, "points": 8 }, "round": "last-12" },
+            { "place": { "min": 13, "points": 6 }, "round": "last-16" },
+            { "place": { "min": 17, "points": 4 }, "round": "last-24" },
+            { "place": { "min": 25, "points": 3 }, "round": "last-32" },
+            { "place": { "min": 33, "points": 2 }, "round": "last-48" },
+            { "place": { "min": 49, "points": 1 }, "round": "last-64" }
+        ]
+    },
+    {
+        "participants": { "min": 33 },
+        "pools": 1,
+        "points": [
+            { "place": { "min": 1, "points": 22 } },
+            { "place": { "min": 2, "points": 18 } },
+            { "place": { "min": 3, "points": 15 } },
+            { "place": { "min": 4, "points": 12 } },
+            { "place": { "min": 5, "points": 10 }, "round": "last-6" },
+            { "place": { "min": 7, "points": 8 }, "round": "last-8" },
+            { "place": { "min": 9, "points": 6 }, "round": "last-12" },
+            { "place": { "min": 13, "points": 4 }, "round": "last-16" },
+            { "place": { "min": 17, "points": 3 }, "round": "last-24" },
+            { "place": { "min": 25, "points": 2 }, "round": "last-32" },
+            { "place": { "min": 33, "points": 1 }, "round": "last-48" },
+            { "place": { "min": 49, "points": 0 }, "round": "last-64" }
+        ]
+    },
+    {
+        "participants": { "min": 25 },
+        "pools": 1,
+        "points": [
+            { "place": { "min": 1, "points": 18 } },
+            { "place": { "min": 2, "points": 15 } },
+            { "place": { "min": 3, "points": 12 } },
+            { "place": { "min": 4, "points": 10 } },
+            { "place": { "min": 5, "points": 8 }, "round": "last-6" },
+            { "place": { "min": 7, "points": 6 }, "round": "last-8" },
+            { "place": { "min": 9, "points": 4 }, "round": "last-12" },
+            { "place": { "min": 13, "points": 3 }, "round": "last-16" },
+            { "place": { "min": 17, "points": 2 }, "round": "last-24" },
+            { "place": { "min": 25, "points": 1 }, "round": "last-32" },
+            { "place": { "min": 33, "points": 0 }, "round": "last-48" }
+        ]
+    },
+    {
+        "participants": { "min": 17 },
+        "pools": 1,
+        "points": [
+            { "place": { "min": 1, "points": 15 } },
+            { "place": { "min": 2, "points": 12 } },
+            { "place": { "min": 3, "points": 10 } },
+            { "place": { "min": 4, "points": 8 } },
+            { "place": { "min": 5, "points": 6 }, "round": "last-6" },
+            { "place": { "min": 7, "points": 4 }, "round": "last-8" },
+            { "place": { "min": 9, "points": 3 }, "round": "last-12" },
+            { "place": { "min": 13, "points": 2 }, "round": "last-16" },
+            { "place": { "min": 17, "points": 1 }, "round": "last-24" },
+            { "place": { "min": 25, "points": 0 }, "round": "last-32" }
+        ]
+    },
+    {
+        "participants": { "min": 13 },
+        "pools": 1,
+        "points": [
+            { "place": { "min": 1, "points": 12 } },
+            { "place": { "min": 2, "points": 10 } },
+            { "place": { "min": 3, "points": 8 } },
+            { "place": { "min": 4, "points": 6 } },
+            { "place": { "min": 5, "points": 4 }, "round": "last-6" },
+            { "place": { "min": 7, "points": 3 }, "round": "last-8" },
+            { "place": { "min": 9, "points": 2 }, "round": "last-12" },
+            { "place": { "min": 13, "points": 1 }, "round": "last-16" },
+            { "place": { "min": 17, "points": 0 }, "round": "last-24" }
+        ]
+    },
+    {
+        "participants": { "min": 9 },
+        "pools": 1,
+        "points": [
+            { "place": { "min": 1, "points": 10 } },
+            { "place": { "min": 2, "points": 8 } },
+            { "place": { "min": 3, "points": 6 } },
+            { "place": { "min": 4, "points": 4 } },
+            { "place": { "min": 5, "points": 3 }, "round": "last-6" },
+            { "place": { "min": 7, "points": 2 }, "round": "last-8" },
+            { "place": { "min": 9, "points": 1 }, "round": "last-12" },
+            { "place": { "min": 13, "points": 0 }, "round": "last-16" }
+        ]
+    },
+    {
+        "participants": { "min": 5 },
+        "pools": 1,
+        "points": [
+            { "place": { "min": 1, "points": 8 } },
+            { "place": { "min": 2, "points": 6 } },
+            { "place": { "min": 3, "points": 4 } },
+            { "place": { "min": 4, "points": 3 } },
+            { "place": { "min": 5, "points": 2 }, "round": "last-6" },
+            { "place": { "min": 7, "points": 1 }, "round": "last-8" },
+            { "place": { "min": 9, "points": 0 }, "round": "last-12" }
+        ]
+    },
+    {
+        "participants": { "min": 0 },
+        "pools": 0,
+        "points": [
+            { "place": { "min": 1, "points": 0 } }
+        ]
+    }
+]
