@@ -231,15 +231,19 @@ class ImportWriter
         // No id and not skipped means: create it. Clubs without a federation marking in the
         // file are not DDHF members, so they get no membership at all - and a club with no
         // membership scores for nobody.
-        $group = Group::firstOrCreate(
-            ['name' => $row['verein_datei']],
-            ['is_active' => true],
-        );
-
-        if ($group->wasRecentlyCreated) {
-            $tally['clubs'][] = "{$group->name} ({$group->public_id})";
-            $this->groups->remember($group);
+        //
+        // Unless it is already there under this name in another spelling - most often because an
+        // earlier row of this run created it. The lookup folds the name: the stored one has been
+        // normalised, so asking for the file's spelling as written misses it, and Buuredanz 2026
+        // got one club twice that way.
+        if ($existing = $this->groups->named($row['verein_datei'])) {
+            return $existing;
         }
+
+        $group = Group::create(['name' => $row['verein_datei'], 'is_active' => true]);
+
+        $tally['clubs'][] = "{$group->name} ({$group->public_id})";
+        $this->groups->remember($group);
 
         return $group;
     }

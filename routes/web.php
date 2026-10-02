@@ -3,7 +3,10 @@
 use App\Http\Controllers\SiteController;
 use App\Http\Middleware\SetLocale;
 use App\Support\SiteUrl;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 /*
  * The site the federation's readers see. Standings and the tournaments they are made of, and
@@ -30,12 +33,22 @@ $site = function (string $locale) {
     Route::get("/{$slug['search']}", [SiteController::class, 'search'])->name('search');
 };
 
+/*
+ * Nothing a reader does here needs a session: every page is a GET, the only forms are filters and
+ * the search box, and nobody logs in. With the web group's session left on, every visit wrote a
+ * row with the visitor's IP address and browser into the sessions table and handed back two
+ * cookies for it. Without it, the site sets no cookie at all.
+ */
+$stateless = [StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class];
+
 Route::middleware(SetLocale::class)
+    ->withoutMiddleware($stateless)
     ->name('site.')
     ->group(fn () => $site('de'));
 
 Route::prefix('en')
     ->middleware(SetLocale::class)
+    ->withoutMiddleware($stateless)
     ->name('site.en.')
     ->group(fn () => $site('en'));
 

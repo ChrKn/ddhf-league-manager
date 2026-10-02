@@ -270,6 +270,39 @@ class ApplyResultImportTest extends TestCase
         $this->assertNull($result->federation_id);
     }
 
+    public function test_a_club_entering_several_tournaments_is_created_once(): void
+    {
+        // The stored name is normalised - "e.V." becomes "e. V." - so looking the club up by the
+        // file's spelling misses the record the first row has just created. Buuredanz 2026 made
+        // two clubs that way out of one fencer in two divisions.
+        $this->writeReviewFile([
+            $this->row('offen', 'Petra Musterlein', 1) + ['verein_datei' => 'Klingenwerk e.V. Testhausen'],
+            $this->row('Damen+', 'Petra Musterlein', 2) + ['verein_datei' => 'Klingenwerk e.V. Testhausen'],
+            $this->row('Damen+', 'Conny Probstett', 3) + ['verein_datei' => 'Klingenwerk Testhausen e. V.'],
+        ]);
+
+        $this->artisan('import:results-apply', ['file' => $this->path])->assertSuccessful();
+
+        $this->assertSame(1, Group::count());
+        $this->assertSame(1, Result::distinct()->count('group_id'));
+    }
+
+    public function test_a_club_already_in_the_database_is_not_created_again(): void
+    {
+        // A row without a club id means "create it from the file", but not a second record under
+        // a name that is already there in another spelling.
+        $existing = Group::create(['name' => 'Klingenwerk e. V.', 'is_active' => true]);
+
+        $this->writeReviewFile([
+            $this->row('offen', 'Petra Musterlein', 1) + ['verein_datei' => 'Klingenwerk e.V.'],
+        ]);
+
+        $this->artisan('import:results-apply', ['file' => $this->path])->assertSuccessful();
+
+        $this->assertSame(1, Group::count());
+        $this->assertSame($existing->id, Result::first()->group_id);
+    }
+
     public function test_a_row_without_a_club_leaves_both_empty(): void
     {
         $this->writeReviewFile([$this->row('offen', 'Petra Muster', 1)]);

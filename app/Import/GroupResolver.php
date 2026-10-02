@@ -50,10 +50,8 @@ class GroupResolver
 
         $normalized = NameMatcher::normalize($name);
 
-        foreach ($this->groups as $group) {
-            if (NameMatcher::normalize($group->name) === $normalized) {
-                return new Suggestion($name, $group, MatchConfidence::Exact, 1.0);
-            }
+        if ($group = $this->named($name)) {
+            return new Suggestion($name, $group, MatchConfidence::Exact, 1.0);
         }
 
         if (isset($this->aliases[$normalized])) {
@@ -87,6 +85,23 @@ class GroupResolver
         }
 
         return Suggestion::missing($name);
+    }
+
+    /**
+     * The club whose name folds to the same key, clubs created since construction included.
+     *
+     * Folded rather than compared as written, because stored names are normalised - "e.V." is
+     * kept as "e. V." - and the file's spelling would otherwise miss the very record it produced.
+     */
+    public function named(string $name): ?Group
+    {
+        $normalized = NameMatcher::normalize($name);
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        return $this->groups->first(fn (Group $group) => NameMatcher::normalize($group->name) === $normalized);
     }
 
     /**
