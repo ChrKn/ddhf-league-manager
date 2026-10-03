@@ -12,6 +12,7 @@ class StandingController extends Controller
     {
         return StandingResource::collection(
             Standing::query()
+                ->public()
                 ->with(['discipline', 'division'])
                 ->get()
         );
@@ -19,8 +20,10 @@ class StandingController extends Controller
 
     public function show(string $public_id)
     {
+        // Only the released years, and no standing at all where none of them is.
         $standing = Standing::where('public_id', $public_id)
-            ->with(['discipline', 'division', 'seasons'])
+            ->public()
+            ->with(['discipline', 'division', 'seasons' => fn ($query) => $query->public()])
             ->first();
 
         if (!$standing) {

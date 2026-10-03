@@ -26,6 +26,9 @@ use Illuminate\Support\Facades\App;
  * Only what a standing is made of is shown - fencers, clubs, placements, points. There is no
  * page here for federations, clubs, fencers, events or seasons in their own right; the browser
  * under /tests has those, and they are not this site's business.
+ *
+ * And only seasons that have been released. A season held back is not on any page here - not as a
+ * table, not as a year in a filter, not through one of its tournaments. See Season::isPublic().
  */
 class SiteController extends Controller
 {
@@ -44,6 +47,7 @@ class SiteController extends Controller
         $year = (int) now()->year;
 
         $seasons = Season::with(SeasonRanking::relations())
+            ->public()
             ->where('year', $year)
             ->get()
             ->sortBy(fn (Season $season) => $season->standing?->display_name ?? '')
@@ -83,6 +87,7 @@ class SiteController extends Controller
     {
         $seasons = Season::with(['standing.discipline', 'standing.division'])
             ->withCount('tournaments')
+            ->public()
             ->when($request->query('jahr'), fn ($query, $jahr) => $query->where('year', $jahr))
             ->when($request->query('disziplin'), fn ($query, $name) => $query->whereHas(
                 'standing.discipline',
@@ -120,7 +125,10 @@ class SiteController extends Controller
      */
     public function standing(Request $request, string $public_id)
     {
+        // A season held back answers as if it did not exist. Its address may have been seen
+        // before, and "not released yet" would confirm what is behind it.
         $season = Season::with(SeasonRanking::relations())
+            ->public()
             ->where('public_id', $public_id)
             ->firstOrFail();
 
@@ -150,6 +158,7 @@ class SiteController extends Controller
         $tournaments = Tournament::query()
             ->with(['event', 'season.standing.discipline', 'season.standing.division'])
             ->withCount('results')
+            ->public()
             ->when($request->query('jahr'), fn ($query, $jahr) => $query->whereHas(
                 'season',
                 fn ($sub) => $sub->where('year', $jahr)
@@ -191,6 +200,7 @@ class SiteController extends Controller
     public function tournament(Request $request, string $public_id)
     {
         $tournament = Tournament::where('public_id', $public_id)
+            ->public()
             ->with([
                 'event',
                 'season.standing.discipline',
@@ -344,7 +354,8 @@ class SiteController extends Controller
         return [
             'jahr' => [
                 'label'   => __('site.columns.year'),
-                'options' => Season::distinct()
+                'options' => Season::public()
+                    ->distinct()
                     ->orderByDesc('year')
                     ->pluck('year', 'year')
                     ->map(fn ($year) => (string) $year)
@@ -352,11 +363,17 @@ class SiteController extends Controller
             ],
             'disziplin' => [
                 'label'   => __('site.columns.discipline'),
-                'options' => Discipline::orderBy('name')->pluck('name', 'name')->all(),
+                'options' => Discipline::whereHas('standings', fn ($query) => $query->public())
+                    ->orderBy('name')
+                    ->pluck('name', 'name')
+                    ->all(),
             ],
             'abteilung' => [
                 'label'   => __('site.columns.division'),
-                'options' => Division::orderBy('name')->pluck('name', 'name')->all(),
+                'options' => Division::whereHas('standings', fn ($query) => $query->public())
+                    ->orderBy('name')
+                    ->pluck('name', 'name')
+                    ->all(),
             ],
         ];
     }

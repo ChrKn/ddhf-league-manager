@@ -33,6 +33,12 @@ class SeasonForm
                 TextInput::make('year')
                     ->required()
                     ->label('Jahr'),
+                Toggle::make('is_public')
+                    ->default(true)
+                    ->label('Öffentlich sichtbar')
+                    ->helperText('Aus, solange die Saison noch nicht freigegeben ist. Sie erscheint '
+                        . 'dann weder auf der öffentlichen Seite noch in der API oder der Suche, '
+                        . 'auch nicht über ihre Turniere. Ergebnisse und Punkte bleiben unverändert.'),
                 Toggle::make('division_choice_required')
                     ->label('Kategorie muss gewählt werden')
                     ->helperText('Wer in dieser Saison in beiden Kategorien derselben Waffe gefochten '

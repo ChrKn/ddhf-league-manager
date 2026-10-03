@@ -25,6 +25,7 @@ class Season extends Model
         'scoring_mode',
         'year',
         'division_choice_required',
+        'is_public',
     ];
 
     protected function casts(): array
@@ -32,7 +33,25 @@ class Season extends Model
         return [
             'scoring_mode'             => ScoringMode::class,
             'division_choice_required' => 'boolean',
+            'is_public'                => 'boolean',
         ];
+    }
+
+    /**
+     * Whether this season may be shown on the site, in the API and in the search.
+     *
+     * Held back while it has not been released yet - the site starts with the current year and the
+     * older ones follow. Only what is shown changes: the results stay, and other seasons still
+     * compute from this one where they need to, as the category choice does across siblings.
+     */
+    public function isPublic(): bool
+    {
+        return (bool) $this->is_public;
+    }
+
+    public function scopePublic(Builder $query): Builder
+    {
+        return $query->where('seasons.is_public', true);
     }
 
     public function standing(): BelongsTo

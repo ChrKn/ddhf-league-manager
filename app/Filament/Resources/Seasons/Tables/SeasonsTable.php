@@ -6,6 +6,8 @@ use App\Models\Standing;
 use App\Standings\ScoringMode;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -15,6 +17,10 @@ class SeasonsTable
     {
         return $table
             ->columns([
+                ToggleColumn::make('is_public')
+                    ->label('Sichtbar')
+                    ->tooltip('Aus: die Saison erscheint weder auf der Seite noch in der API oder '
+                        . 'der Suche. Ergebnisse und Punkte bleiben.'),
                 TextColumn::make('public_id')
                     ->searchable()
                     ->label('ID'),
@@ -57,7 +63,8 @@ class SeasonsTable
             ])
             ->defaultSort('year', 'desc')
             ->filters([
-                //
+                TernaryFilter::make('is_public')
+                    ->label('Sichtbar'),
             ])
             ->recordActions([
                 EditAction::make(),

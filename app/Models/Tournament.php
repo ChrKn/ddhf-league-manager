@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\GenerateRandomString;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -100,6 +101,13 @@ class Tournament extends Model
     {
         return $this->belongsTo(Season::class);
     }
+
+    /** Tournaments of a season that may be shown. See Season::isPublic(). */
+    public function scopePublic(Builder $query): Builder
+    {
+        return $query->whereHas('season', fn (Builder $season) => $season->public());
+    }
+
     public function ruleset(): BelongsTo
     {
         return $this->belongsTo(Ruleset::class);

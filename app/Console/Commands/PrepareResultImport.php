@@ -174,7 +174,7 @@ class PrepareResultImport extends Command
 
         $this->warn("{$open} Zeilen brauchen eine Entscheidung in der Spalte \"aktion\".");
         $this->line('  use    = den zugeordneten Fechter verwenden (fechter_id ggf. vorher korrigieren)');
-        $this->line('  create = Fechter neu anlegen - dazu fechter_id leeren');
+        $this->line('  create = Fechter neu anlegen (eine fechter_id in der Zeile wird dann nicht beachtet)');
         $this->line('  skip   = Zeile überspringen');
         $this->newLine();
         // The column decides the fencer and nothing else, and it says so nowhere in the file.

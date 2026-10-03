@@ -282,6 +282,43 @@ class ResultImportPanelTest extends TestCase
         $this->assertSame('create', $row->refresh()->action);
     }
 
+    public function test_switching_the_action_to_creating_lets_go_of_the_assigned_fencer(): void
+    {
+        $import = $this->planned();
+        $fencer = Fencer::create(['first_name' => 'Anna', 'last_name' => 'Beispiel', 'is_active' => true]);
+        $row = $import->rows()->where('name', 'Anna Beispiel')->first();
+        $row->update(['fencer_id' => $fencer->id, 'action' => 'use']);
+
+        $column = Livewire::test(ReviewResultImport::class, ['record' => $import->getKey()])
+            ->instance()
+            ->getTable()
+            ->getColumn('action')
+            ->record($row);
+
+        $column->updateState('create');
+
+        // The row would otherwise go on showing a person the write is told not to use.
+        $row->refresh();
+        $this->assertSame('create', $row->action);
+        $this->assertNull($row->fencer_id);
+    }
+
+    public function test_a_new_fencer_is_created_even_where_one_is_still_assigned(): void
+    {
+        $import = $this->planned();
+        $fencer = Fencer::create(['first_name' => 'Anna', 'last_name' => 'Beispiel', 'is_active' => true]);
+
+        // The state the screen no longer produces, but an older row or a hand-edited file can.
+        $import->rows()->update(['fencer_id' => $fencer->id, 'action' => 'create']);
+
+        Livewire::test(ReviewResultImport::class, ['record' => $import->getKey()])
+            ->callAction('apply');
+
+        // The action decides: the assigned person gets nothing, and new records carry the results.
+        $this->assertSame(0, Result::where('fencer_id', $fencer->id)->count());
+        $this->assertSame($import->rows()->count(), Result::count());
+    }
+
     public function test_the_write_waits_until_a_row_the_matcher_could_not_read_is_answered(): void
     {
         // "Verletzung/Aufgabe" is not a placement, so nothing is filled in for it.

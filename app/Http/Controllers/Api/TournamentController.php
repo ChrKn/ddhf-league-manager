@@ -10,7 +10,9 @@ class TournamentController extends Controller
 {
     public function show(string $public_id)
     {
+        // Not one of a season that is held back, which would hand out its results one by one.
         $tournament = Tournament::where('public_id', $public_id)
+            ->public()
             ->with([
                 'event',
                 'ruleset',

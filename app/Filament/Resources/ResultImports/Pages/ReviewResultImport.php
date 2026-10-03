@@ -309,7 +309,15 @@ class ReviewResultImport extends Page implements HasTable
                     ->label('Damit tun')
                     ->options(ImportWriter::ACTION_LABELS)
                     ->placeholder('Noch offen')
-                    ->disabled(fn (): bool => !$this->editable()),
+                    ->disabled(fn (): bool => !$this->editable())
+                    // The other direction of the pairing above. Asking for a new record while a
+                    // fencer stays assigned leaves a row that says one thing and shows another;
+                    // the assignment goes, as it does for the bulk action.
+                    ->afterStateUpdated(function (ResultImportRow $record, $state): void {
+                        if (in_array($state, ImportWriter::CREATING, true)) {
+                            $record->update(['fencer_id' => null]);
+                        }
+                    }),
                 TextColumn::make('fencer_quality')
                     ->label('Güte Fechter')
                     ->state(fn (ResultImportRow $record): string => self::quality(
@@ -398,10 +406,9 @@ class ReviewResultImport extends Page implements HasTable
                         continue;
                     }
 
-                    // Whether a fencer is created or reused is decided by whether one is
-                    // assigned, not by the word in this column. Asking for a new record while
-                    // leaving the assignment in place would quietly reuse the assigned one, and
-                    // the row would say the opposite of what it did.
+                    // Asking for a new record while leaving the assignment in place would show a
+                    // fencer the write then ignores. The writer goes by the action; the row
+                    // should not suggest otherwise.
                     $record->update([
                         'action'    => $action,
                         'fencer_id' => $action === 'create' ? null : $record->fencer_id,

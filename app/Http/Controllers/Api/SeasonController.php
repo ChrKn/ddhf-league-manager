@@ -11,12 +11,17 @@ use App\Standings\ScoringMode;
 use App\Standings\StandingCalculator;
 use InvalidArgumentException;
 
+/**
+ * Only seasons that have been released. One that is held back answers 404 like one that does not
+ * exist - see Season::isPublic().
+ */
 class SeasonController extends Controller
 {
     public function index()
     {
         return SeasonResource::collection(
             Season::query()
+                ->public()
                 ->with(['standing.discipline', 'standing.division'])
                 ->get()
         );
@@ -25,6 +30,7 @@ class SeasonController extends Controller
     public function show(string $public_id)
     {
         $season = Season::where('public_id', $public_id)
+            ->public()
             ->with(['standing.discipline', 'standing.division'])
             ->first();
 
@@ -40,6 +46,7 @@ class SeasonController extends Controller
     public function standing(string $public_id)
     {
         $season = Season::where('public_id', $public_id)
+            ->public()
             ->with(['tournaments.results.fencer.group', 'tournaments.ruleset'])
             ->first();
 

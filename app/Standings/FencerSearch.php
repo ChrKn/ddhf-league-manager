@@ -24,6 +24,9 @@ use App\Models\Season;
  * Anonymised fencers are not findable, and not by a special case: their name was deleted, so there
  * is nothing to match against. The guard against reaching them another way lives in the standing -
  * see SeasonRanking, which withholds an anonymised entry's tournaments.
+ *
+ * Seasons that are held back are not searched. A hit there would point at a table the site does
+ * not show, and say who is in it.
  */
 final class FencerSearch
 {
@@ -106,7 +109,12 @@ final class FencerSearch
             //
             // Not the whole answer - a season that requires a category declaration can still leave
             // somebody out - but that is settled per season, below, where it belongs.
-            ->whereHas('results', fn ($sub) => $sub->where('federation_id', $own->id))
+            //
+            // Results in a season that is held back do not count towards that either, for the
+            // same reason: somebody ranked only there would take a place and then show nothing.
+            ->whereHas('results', fn ($sub) => $sub
+                ->where('federation_id', $own->id)
+                ->whereHas('tournament', fn ($tournament) => $tournament->public()))
             ->where(function ($sub) use ($needle) {
                 $sub->where('first_name', 'like', $needle)
                     ->orWhere('last_name', 'like', $needle)
@@ -170,6 +178,6 @@ final class FencerSearch
             ->distinct()
             ->pluck('tournaments.season_id');
 
-        return Season::whereIn('id', $ids)->with(SeasonRanking::relations())->get();
+        return Season::whereIn('id', $ids)->public()->with(SeasonRanking::relations())->get();
     }
 }

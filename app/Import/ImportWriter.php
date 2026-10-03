@@ -25,6 +25,9 @@ class ImportWriter
     /** What the "aktion" column of a reviewed row may say. */
     public const ACTIONS = ['use', 'create', 'create_inactive', 'skip'];
 
+    /** The actions that make a new record, whatever fechter_id says. */
+    public const CREATING = ['create', 'create_inactive'];
+
     /**
      * The same four, said in a way somebody choosing between them can act on.
      *
@@ -251,7 +254,11 @@ class ImportWriter
     /** @param array<string, mixed> $tally */
     private function fencer(array $row, ?Group $group, array &$tally): Fencer
     {
-        if ($row['fechter_id'] !== '') {
+        // The action decides, not whether an id happens to be filled in. A row switched to "neu
+        // anlegen" can still carry the suggestion it started with - from a file whose id nobody
+        // cleared, or from a screen that kept it - and reusing that person would do the opposite
+        // of what the reviewer asked for.
+        if ($row['aktion'] === 'use') {
             $fencer = $this->fencers->byPublicId($row['fechter_id']);
 
             if (!$fencer) {
