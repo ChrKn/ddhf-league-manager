@@ -5,7 +5,7 @@ return [
     /*
      * Whether search engines may keep what they find here.
      *
-     * False sends X-Robots-Tag: noindex, nofollow with every response - see
+     * False sends X-Robots-Tag: noindex, follow with every response - see
      * App\Http\Middleware\HideFromSearchEngines for why it is a header and not a line in
      * robots.txt.
      *

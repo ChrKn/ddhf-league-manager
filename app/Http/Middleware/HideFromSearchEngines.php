@@ -30,9 +30,10 @@ class HideFromSearchEngines
         $response = $next($request);
 
         if (!config('site.indexable')) {
-            // nofollow as well, so the links on a page that is not to be kept do not become the
-            // way the next one is found.
-            $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+            // follow, matching the robots meta in the site's layout. A crawler takes the stricter
+            // of two answers that disagree, and the pages it would reach by following a link say
+            // noindex themselves.
+            $response->headers->set('X-Robots-Tag', 'noindex, follow');
         }
 
         return $response;

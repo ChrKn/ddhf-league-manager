@@ -20,7 +20,8 @@
     <title>{{ $title ?? __('site.brand_claim') }} · DDHF</title>
     <link rel="alternate" hreflang="de" href="{{ \App\Support\SiteUrl::alternate('de') }}">
     <link rel="alternate" hreflang="en" href="{{ \App\Support\SiteUrl::alternate('en') }}">
-    @isset($noindex)<meta name="robots" content="noindex">@endisset
+    {{-- On every page, next to the X-Robots-Tag header - two places to forget rather than one. --}}
+    <meta name="robots" content="noindex,follow">
     <link rel="icon" href="{{ asset('img/ddhf-signet.svg') }}" type="image/svg+xml">
     <style>
         :root {

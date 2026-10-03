@@ -279,7 +279,7 @@ class SiteController extends Controller
      * Deliberately not a page per fencer. The hits point into the standings the person appears in,
      * which is what a reader wants and stops short of publishing a page that reads as a dossier
      * about somebody. `noindex` for the same reason - findable on the site, not through a search
-     * engine, and search result pages have no business being indexed anyway.
+     * engine. The layout puts it on every page now, this one included.
      */
     public function search(Request $request, FencerSearch $search)
     {
@@ -293,7 +293,6 @@ class SiteController extends Controller
             'total'   => $found['total'],
             'trimmed' => $found['trimmed'],
             'tooShort' => $query !== '' && mb_strlen(trim($query)) < FencerSearch::MINIMUM,
-            'noindex' => true,
         ]);
     }
 

@@ -658,8 +658,9 @@ fires looks like from the outside.
 
 The site is finished before it is meant to be public, and those are two different days. In between
 it answers to anybody who knows the address, and it should still not turn up in a search result —
-so `SITE_INDEXABLE=false` in the environment, which sends `X-Robots-Tag: noindex, nofollow` with
-every response.
+so `SITE_INDEXABLE=false` in the environment, which sends `X-Robots-Tag: noindex, follow` with
+every response. The site's pages also carry `<meta name="robots" content="noindex,follow">` in
+their head, regardless of the switch — two places to forget rather than one.
 
 A header, and **not** a `Disallow: /` in `robots.txt`. Those are not two ways of saying the same
 thing. `Disallow` tells a crawler not to fetch the page — so it never reads the noindex either, and

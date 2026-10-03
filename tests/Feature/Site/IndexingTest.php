@@ -17,7 +17,7 @@ class IndexingTest extends TestCase
     {
         config(['site.indexable' => false]);
 
-        $this->get('/')->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+        $this->get('/')->assertHeader('X-Robots-Tag', 'noindex, follow');
     }
 
     public function test_the_api_is_covered_by_the_same_switch(): void
@@ -26,7 +26,7 @@ class IndexingTest extends TestCase
         // on by something global rather than by the site's own routes.
         config(['site.indexable' => false]);
 
-        $this->getJson('/api/standings')->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+        $this->getJson('/api/standings')->assertHeader('X-Robots-Tag', 'noindex, follow');
     }
 
     public function test_the_switch_comes_back_off(): void

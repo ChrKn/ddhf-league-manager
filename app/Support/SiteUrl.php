@@ -27,13 +27,12 @@ final class SiteUrl
      * at boot, and because these are addresses first and words second - changing one breaks
      * every link anybody saved, which is a heavier decision than rewording a heading.
      *
-     * The German asymmetry is deliberate and carried over: standings answer at /ranglisten,
-     * tournaments at /ddhf-turniere, because "Turniere" alone would claim more than this site
-     * shows - only the ones that count towards a DDHF standing are here.
+     * The old /ddhf-turniere and /en/ddhf-tournaments are gone without a redirect; nothing had
+     * been published under them yet.
      */
     public const SLUGS = [
-        'de' => ['standings' => 'ranglisten', 'tournaments' => 'ddhf-turniere', 'search' => 'suche'],
-        'en' => ['standings' => 'standings',  'tournaments' => 'ddhf-tournaments', 'search' => 'search'],
+        'de' => ['standings' => 'ranglisten', 'tournaments' => 'turniere', 'search' => 'suche'],
+        'en' => ['standings' => 'standings',  'tournaments' => 'tournaments', 'search' => 'search'],
     ];
 
     public static function to(string $name, mixed $parameters = []): string

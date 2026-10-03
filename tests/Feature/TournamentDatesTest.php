@@ -125,12 +125,12 @@ class TournamentDatesTest extends TestCase
 
         // Inherited from a two-day event: one date. Printing the event's span against each of its
         // tournaments would claim something nobody established.
-        $this->get('/ddhf-turniere/' . $inherited->public_id)
+        $this->get('/turniere/' . $inherited->public_id)
             ->assertOk()
             ->assertSee('09.05.2026')
             ->assertDontSee('09.05.2026 – 10.05.2026');
 
-        $this->get('/ddhf-turniere/' . $own->public_id)
+        $this->get('/turniere/' . $own->public_id)
             ->assertOk()
             ->assertSee('09.05.2026 – 10.05.2026');
     }
@@ -139,7 +139,7 @@ class TournamentDatesTest extends TestCase
     {
         $sunday = $this->tournament(['start_date' => '2026-05-10']);
 
-        $this->get('/ddhf-turniere')
+        $this->get('/turniere')
             ->assertOk()
             ->assertSee('data-sort="2026-05-10"', false);
 

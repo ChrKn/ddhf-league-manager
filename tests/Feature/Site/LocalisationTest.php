@@ -96,9 +96,9 @@ class LocalisationTest extends TestCase
         return [
             '/'                => '/en',
             '/ranglisten'      => '/en/standings',
-            '/ddhf-turniere'   => '/en/ddhf-tournaments',
+            '/turniere'        => '/en/tournaments',
             '/ranglisten/' . $this->season->public_id        => '/en/standings/' . $this->season->public_id,
-            '/ddhf-turniere/' . $this->tournament->public_id => '/en/ddhf-tournaments/' . $this->tournament->public_id,
+            '/turniere/' . $this->tournament->public_id => '/en/tournaments/' . $this->tournament->public_id,
         ];
     }
 
@@ -110,9 +110,30 @@ class LocalisationTest extends TestCase
         // And only in its own words: a German path under /en is not a second address for the
         // English page, it is nothing at all.
         $this->get('/en/ranglisten')->assertNotFound();
-        $this->get('/en/ddhf-turniere')->assertNotFound();
+        $this->get('/en/turniere')->assertNotFound();
         $this->get('/standings')->assertNotFound();
-        $this->get('/ddhf-tournaments')->assertNotFound();
+        $this->get('/tournaments')->assertNotFound();
+    }
+
+    public function test_the_old_tournament_addresses_are_gone(): void
+    {
+        // Not redirected either: nothing was ever published under them.
+        $this->get('/ddhf-turniere')->assertNotFound();
+        $this->get('/ddhf-turniere/' . $this->tournament->public_id)->assertNotFound();
+        $this->get('/en/ddhf-tournaments')->assertNotFound();
+        $this->get('/en/ddhf-tournaments/' . $this->tournament->public_id)->assertNotFound();
+    }
+
+    public function test_every_page_asks_not_to_be_indexed_in_its_own_head(): void
+    {
+        // As well as the X-Robots-Tag header, and independent of the switch behind it.
+        config(['site.indexable' => true]);
+
+        foreach (array_merge(array_keys($this->pages()), array_values($this->pages()), ['/suche?q=xy', '/en/search?q=xy']) as $path) {
+            $this->get($path)
+                ->assertOk()
+                ->assertSee('<meta name="robots" content="noindex,follow">', false);
+        }
     }
 
     public function test_every_page_answers_in_both_languages(): void
@@ -242,8 +263,8 @@ class LocalisationTest extends TestCase
     {
         $date = now()->startOfYear()->addMonths(3);
 
-        $this->get('/ddhf-turniere')->assertOk()->assertSee($date->format('d.m.Y'));
-        $this->get('/en/ddhf-tournaments')->assertOk()->assertSee($date->format('j M Y'));
+        $this->get('/turniere')->assertOk()->assertSee($date->format('d.m.Y'));
+        $this->get('/en/tournaments')->assertOk()->assertSee($date->format('j M Y'));
     }
 
     public function test_ranks_are_written_the_way_each_language_writes_them(): void
@@ -265,11 +286,11 @@ class LocalisationTest extends TestCase
 
         // Asserted on the cell rather than on the text: "2." and "2nd" both occur elsewhere on a
         // page full of numbers, and a loose match would pass on the wrong one.
-        $this->get('/ddhf-turniere/' . $this->tournament->public_id)
+        $this->get('/turniere/' . $this->tournament->public_id)
             ->assertOk()
             ->assertSee('data-sort="2">2.</td>', false);
 
-        $this->get('/en/ddhf-tournaments/' . $this->tournament->public_id)
+        $this->get('/en/tournaments/' . $this->tournament->public_id)
             ->assertOk()
             ->assertSee('data-sort="2">2nd</td>', false)
             ->assertDontSee('data-sort="2">2.</td>', false);

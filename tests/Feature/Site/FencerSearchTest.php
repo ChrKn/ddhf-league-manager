@@ -205,11 +205,11 @@ class FencerSearchTest extends TestCase
 
     public function test_a_search_engine_is_asked_to_stay_away(): void
     {
-        // The standings are indexed and stay indexed. A page that answers to a person's name is a
-        // different thing, and a result page has no business in an index anyway.
+        // Every page says so for now. This one must keep saying it even once the standings are
+        // let into an index: a page that answers to a person's name has no business there.
         $this->get('/suche?q=Nachnahme')
             ->assertOk()
-            ->assertSee('<meta name="robots" content="noindex">', false);
+            ->assertSee('<meta name="robots" content="noindex,follow">', false);
     }
 
     public function test_one_letter_is_not_a_search(): void

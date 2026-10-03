@@ -158,7 +158,7 @@ class VisibilityTest extends TestCase
         foreach ([
             '/',
             '/ranglisten/' . $this->season->public_id,
-            '/ddhf-turniere/' . $this->tournament->public_id,
+            '/turniere/' . $this->tournament->public_id,
             '/en/standings/' . $this->season->public_id,
         ] as $path) {
             $this->get($path)
