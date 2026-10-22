@@ -42,8 +42,25 @@ class IndexingTest extends TestCase
         // turned away by robots.txt never reads the noindex, and an address it heard about
         // elsewhere can be listed anyway - without a description, which is worse than not being
         // listed. Shutting the door here would quietly undo the switch above.
-        $robots = file_get_contents(public_path('robots.txt'));
+        foreach ([false, true] as $indexable) {
+            config(['site.indexable' => $indexable]);
 
-        $this->assertStringNotContainsString('Disallow: /', $robots);
+            $this->get('/robots.txt')
+                ->assertOk()
+                ->assertHeader('Content-Type', 'text/plain; charset=utf-8')
+                ->assertSee('User-agent: *')
+                ->assertDontSee('Disallow: /');
+        }
+    }
+
+    public function test_robots_names_the_sitemap_only_when_the_site_wants_to_be_found(): void
+    {
+        config(['site.indexable' => false]);
+
+        $this->get('/robots.txt')->assertDontSee('Sitemap:');
+
+        config(['site.indexable' => true]);
+
+        $this->get('/robots.txt')->assertSee('Sitemap: http://localhost/sitemap.xml');
     }
 }

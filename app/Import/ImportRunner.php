@@ -350,12 +350,13 @@ class ImportRunner
             orphanedFencers: $summary['fencers'],
             orphanedClubs: $summary['clubs'],
             dryRun: $dryRun,
+            removedPlaceholders: $summary['placeholders'],
         );
     }
 
     /**
      * @param  list<int>  $resultIds
-     * @return array{results: int, tournaments: list<string>, fencers: list<string>, clubs: list<string>}
+     * @return array{results: int, tournaments: list<string>, fencers: list<string>, clubs: list<string>, placeholders: int}
      */
     private function undo(ResultImport $import, array $resultIds): array
     {
@@ -382,6 +383,12 @@ class ImportRunner
 
         $import->rows()->update(['result_id' => null]);
 
+        // See WithdrawalSummary for why these, and only these, go.
+        $placeholders = Fencer::whereIn('id', $fencerIds)
+            ->whereNotNull('anonymized_at')
+            ->doesntHave('results')
+            ->delete();
+
         $import->update([
             'status'     => ImportStatus::Review,
             'applied_at' => null,
@@ -401,6 +408,7 @@ class ImportRunner
                 ->get()
                 ->map(fn (Group $g) => "{$g->name} ({$g->public_id})")
                 ->all(),
+            'placeholders' => $placeholders,
         ];
     }
 

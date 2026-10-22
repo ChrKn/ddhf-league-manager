@@ -179,6 +179,40 @@ class SeasonVisibilityTest extends TestCase
         $this->get(route('site.tournament', $this->shownTournament->public_id))->assertOk();
     }
 
+    public function test_the_sitemap_does_not_offer_it_or_its_tournaments(): void
+    {
+        config(['site.indexable' => true]);
+
+        $this->get('/sitemap.xml')
+            ->assertOk()
+            ->assertSee($this->shown->public_id)
+            ->assertSee($this->shownTournament->public_id)
+            ->assertDontSee($this->held->public_id)
+            ->assertDontSee($this->heldTournament->public_id);
+    }
+
+    public function test_the_json_does_not_offer_it_or_its_tournaments(): void
+    {
+        config(['site.indexable' => true]);
+
+        $this->get("/data/standings/{$this->held->public_id}.json")->assertNotFound();
+        $this->get("/data/tournaments/{$this->heldTournament->public_id}.json")->assertNotFound();
+
+        $this->get("/data/standings/{$this->shown->public_id}.json")->assertOk();
+        $this->get("/data/tournaments/{$this->shownTournament->public_id}.json")->assertOk();
+
+        $this->get('/data/standings.json')->assertOk()->assertSee($this->shown->public_id);
+        $this->get('/data/tournaments.json')->assertOk()->assertSee($this->shownTournament->public_id);
+
+        foreach (['/data/standings.json', '/data/tournaments.json'] as $path) {
+            $this->get($path)
+                ->assertDontSee($this->held->public_id)
+                ->assertDontSee($this->heldTournament->public_id)
+                ->assertDontSee('Verborgenes Turnier')
+                ->assertDontSee('Rapier');
+        }
+    }
+
     public function test_the_front_page_leaves_out_a_held_back_season_of_this_year(): void
     {
         $this->get(route('site.index'))->assertOk()->assertSee('Mustermann');

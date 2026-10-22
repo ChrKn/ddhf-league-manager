@@ -30,6 +30,7 @@ class ResultImportRow extends Model
         'group_confidence',
         'group_score',
         'action',
+        'anonymize',
         'note',
         'result_id',
     ];
@@ -38,6 +39,7 @@ class ResultImportRow extends Model
         'sheet_row'         => 'integer',
         'fencer_score'      => 'float',
         'group_score'       => 'float',
+        'anonymize'         => 'boolean',
         'fencer_confidence' => MatchConfidence::class,
         'group_confidence'  => MatchConfidence::class,
     ];
@@ -85,6 +87,7 @@ class ResultImportRow extends Model
             'group_confidence'  => $match['group']->confidence,
             'group_score'       => $match['group']->found() ? $match['group']->score : null,
             'action'            => $planRow['aktion'] !== '' ? $planRow['aktion'] : null,
+            'anonymize'         => ($planRow['anonymisieren'] ?? '') === '1',
             'note'              => $planRow['hinweis'] !== '' ? $planRow['hinweis'] : null,
         ];
     }
@@ -98,6 +101,7 @@ class ResultImportRow extends Model
     {
         return [
             'aktion'            => (string) $this->action,
+            'anonymisieren'     => $this->anonymize ? '1' : '',
             'datei'             => (string) $this->sheet?->original_name,
             'turnier'           => (string) $this->sheet?->tournament?->public_id,
             'turniersystem'     => (string) $this->sheet?->format,

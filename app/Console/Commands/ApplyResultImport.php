@@ -89,8 +89,10 @@ class ApplyResultImport extends Command
         }
 
         // "hinweis" is the planner talking to the reviewer and nothing the write needs, so a
-        // review file from before it existed still goes through.
-        $missing = array_diff(ImportPlanner::COLUMNS, $header, ['hinweis']);
+        // review file from before it existed still goes through. So does one from before
+        // "anonymisieren": missing, it means no, and a placeholder row in such a file is caught
+        // by the writer's check rather than written as somebody's name.
+        $missing = array_diff(ImportPlanner::COLUMNS, $header, ['hinweis', 'anonymisieren']);
 
         if ($missing !== []) {
             throw new RuntimeException('Diese Spalten fehlen: ' . implode(', ', $missing));

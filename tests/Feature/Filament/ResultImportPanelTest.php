@@ -303,6 +303,60 @@ class ResultImportPanelTest extends TestCase
         $this->assertNull($row->fencer_id);
     }
 
+    public function test_ticking_anonymise_makes_the_row_a_new_record(): void
+    {
+        $import = $this->planned();
+        $fencer = Fencer::create(['first_name' => 'Anna', 'last_name' => 'Beispiel', 'is_active' => true]);
+        $row = $import->rows()->where('name', 'Anna Beispiel')->first();
+        $row->update(['fencer_id' => $fencer->id, 'action' => 'use']);
+
+        $column = Livewire::test(ReviewResultImport::class, ['record' => $import->getKey()])
+            ->instance()
+            ->getTable()
+            ->getColumn('anonymize')
+            ->record($row);
+
+        $column->updateState(true);
+
+        // An anonymous starter is nobody on record, so the assignment cannot stay beside the tick.
+        $row->refresh();
+        $this->assertTrue($row->anonymize);
+        $this->assertSame('create', $row->action);
+        $this->assertNull($row->fencer_id);
+    }
+
+    public function test_choosing_a_fencer_takes_the_tick_away(): void
+    {
+        $import = $this->planned();
+        $fencer = Fencer::create(['first_name' => 'Anna', 'last_name' => 'Beispiel', 'is_active' => true]);
+        $row = $import->rows()->where('name', 'Anna Beispiel')->first();
+        $row->update(['action' => 'create', 'anonymize' => true]);
+
+        $column = Livewire::test(ReviewResultImport::class, ['record' => $import->getKey()])
+            ->instance()
+            ->getTable()
+            ->getColumn('fencer_id')
+            ->record($row);
+
+        $column->updateState($fencer->id);
+
+        // Somebody on record is anonymised through their own record, never in passing here.
+        $row->refresh();
+        $this->assertSame('use', $row->action);
+        $this->assertFalse($row->anonymize);
+    }
+
+    public function test_skipping_a_selection_takes_the_tick_away(): void
+    {
+        $import = $this->planned();
+        $import->rows()->update(['action' => 'create', 'anonymize' => true]);
+
+        Livewire::test(ReviewResultImport::class, ['record' => $import->getKey()])
+            ->callTableBulkAction('bulkSkip', $import->rows()->get());
+
+        $this->assertSame([false, false], $import->rows()->pluck('anonymize')->map(fn ($v) => (bool) $v)->all());
+    }
+
     public function test_a_new_fencer_is_created_even_where_one_is_still_assigned(): void
     {
         $import = $this->planned();

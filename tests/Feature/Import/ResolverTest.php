@@ -193,9 +193,10 @@ class ResolverTest extends TestCase
 
     public function test_a_placeholder_created_by_the_import_is_never_suggested_either(): void
     {
-        // create_inactive disables the record but sets no anonymisation date, so checking the
-        // flag alone lets the placeholder back in. It did: the three anonymous starters of 2024
-        // all resolved onto one record that had stood for someone else since 2023.
+        // Imports used to store the placeholder as a disabled record with no anonymisation date,
+        // and one like that may still turn up some other way - so checking the flag alone would
+        // let the placeholder back in. It did: the three anonymous starters of 2024 all resolved
+        // onto one record that had stood for someone else since 2023.
         $group = $this->group('Schwabenfedern');
 
         Fencer::create([

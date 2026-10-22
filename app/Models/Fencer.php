@@ -26,6 +26,9 @@ class Fencer extends Model
      */
     public const ANONYMOUS_NAME = 'Anonymer Fechter';
 
+    /** The reason recorded for a starter whom the organisers had anonymised before the import. */
+    public const ANONYMISED_BY_ORGANISERS = 'Vom Veranstalter anonymisiert';
+
     protected $fillable = [
         'is_active',
         'public_id',

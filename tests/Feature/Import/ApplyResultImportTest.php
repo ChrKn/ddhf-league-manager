@@ -82,10 +82,16 @@ class ApplyResultImportTest extends TestCase
         fclose($handle);
     }
 
-    private function row(string $division, string $name, int $placement, string $aktion = 'create'): array
-    {
+    private function row(
+        string $division,
+        string $name,
+        int $placement,
+        string $aktion = 'create',
+        bool $anonymise = false,
+    ): array {
         return [
-            'aktion'     => $aktion,
+            'aktion'        => $aktion,
+            'anonymisieren' => $anonymise ? '1' : '',
             'turnier'    => $this->tournaments[$division]->public_id,
             'platz'      => (string) $placement,
             'name_datei' => $name,
@@ -183,16 +189,63 @@ class ApplyResultImportTest extends TestCase
         $this->assertSame(1, Fencer::count());
     }
 
-    public function test_create_inactive_marks_the_fencer_as_anonymized(): void
+    public function test_a_row_the_organisers_anonymised_becomes_an_anonymised_record(): void
+    {
+        // Not a disabled record called "Anonymer Fechter": that read as anonymous everywhere and
+        // was marked as such nowhere, so the JSON said anonymized: false next to the placeholder.
+        $row = $this->row('offen', 'Anonymer Fechter', 5, anonymise: true);
+        $row['verein_datei'] = 'Fechtschule Musterstadt';
+
+        $this->writeReviewFile([$row]);
+
+        $this->artisan('import:results-apply', ['file' => $this->path])->assertSuccessful();
+
+        $fencer = Fencer::first();
+        $this->assertTrue($fencer->isAnonymized());
+        $this->assertSame(Fencer::ANONYMISED_BY_ORGANISERS, $fencer->anonymization_reason);
+        $this->assertNull($fencer->first_name);
+        $this->assertNull($fencer->last_name);
+        $this->assertFalse((bool) $fencer->is_active);
+        $this->assertSame(Fencer::ANONYMOUS_NAME, $fencer->display_name);
+
+        // Nor the club the row carried: it is the last trait left that leads back to a person.
+        $result = Result::first();
+        $this->assertNull($result->group_id);
+        $this->assertNull($result->fencer_group_name);
+        $this->assertSame(0, Group::count());
+    }
+
+    public function test_the_placeholder_is_not_written_as_a_name(): void
+    {
+        $this->writeReviewFile([
+            $this->row('offen', 'Anonymer Fechter', 5),
+        ]);
+
+        $this->artisan('import:results-apply', ['file' => $this->path])->assertFailed();
+
+        $this->assertSame(0, Fencer::count());
+    }
+
+    public function test_anonymising_goes_with_a_new_record_only(): void
+    {
+        $this->writeReviewFile([
+            $this->row('offen', 'Magret Test', 1, 'skip', anonymise: true),
+        ]);
+
+        $this->artisan('import:results-apply', ['file' => $this->path])->assertFailed();
+    }
+
+    public function test_create_inactive_is_refused_with_a_note_on_what_replaced_it(): void
     {
         $this->writeReviewFile([
             $this->row('offen', 'Anonymer Fechter', 5, 'create_inactive'),
         ]);
 
-        $this->artisan('import:results-apply', ['file' => $this->path])->assertSuccessful();
+        $this->artisan('import:results-apply', ['file' => $this->path])
+            ->expectsOutputToContain('create_inactive')
+            ->assertFailed();
 
-        $fencer = Fencer::first();
-        $this->assertFalse((bool) $fencer->is_active);
+        $this->assertSame(0, Fencer::count());
     }
 
     public function test_two_unrecorded_fencers_do_not_become_one(): void
@@ -201,8 +254,8 @@ class ApplyResultImportTest extends TestCase
         // the first one would pile placements of different people onto one fencer - which is what
         // happened to five results before this guard existed.
         $this->writeReviewFile([
-            $this->row('offen', Fencer::ANONYMOUS_NAME, 3, 'create_inactive'),
-            $this->row('Damen+', Fencer::ANONYMOUS_NAME, 4, 'create_inactive'),
+            $this->row('offen', Fencer::ANONYMOUS_NAME, 3, anonymise: true),
+            $this->row('Damen+', Fencer::ANONYMOUS_NAME, 4, anonymise: true),
         ]);
 
         $this->artisan('import:results-apply', ['file' => $this->path])->assertSuccessful();

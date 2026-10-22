@@ -57,8 +57,9 @@ class FencerForm
                     ->disabled()
                     ->placeholder('Automatisch generiert')
                     ->label('ID'),
-                // Set only by the Anonymisieren action, never by hand: the flag has to mean that
-                // the personal data really is gone.
+                // Set only by the Anonymisieren action, or by an import of a starter the organisers
+                // had already anonymised - never by hand: the flag has to mean that the personal
+                // data really is gone.
                 DateTimePicker::make('anonymized_at')
                     ->disabled()
                     ->placeholder('Nicht anonymisiert')

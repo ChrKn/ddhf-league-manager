@@ -22,25 +22,31 @@ use RuntimeException;
  */
 class ImportWriter
 {
-    /** What the "aktion" column of a reviewed row may say. */
-    public const ACTIONS = ['use', 'create', 'create_inactive', 'skip'];
+    /**
+     * What the "aktion" column of a reviewed row may say.
+     *
+     * Whether the person may be named is not among them. It used to be - "create_inactive", for a
+     * row the organisers had already anonymised - and that folded two questions into one answer:
+     * the record it made was disabled, but kept the placeholder as its name and was never marked
+     * as anonymised. It is the "anonymisieren" column now, next to this one.
+     */
+    public const ACTIONS = ['use', 'create', 'skip'];
 
     /** The actions that make a new record, whatever fechter_id says. */
-    public const CREATING = ['create', 'create_inactive'];
+    public const CREATING = ['create'];
 
     /**
-     * The same four, said in a way somebody choosing between them can act on.
+     * The same three, said in a way somebody choosing between them can act on.
      *
-     * Every one of them names the fencer, because that is what three of them decide and what the
-     * fourth skips a whole row over. The club is not among them: it is used when one is picked and
+     * Every one of them names the fencer, because that is what two of them decide and what the
+     * third skips a whole row over. The club is not among them: it is used when one is picked and
      * created from the file's spelling when none is, and saying "neu anlegen" in two columns that
      * mean different things is exactly how this got read as being about the club.
      */
     public const ACTION_LABELS = [
-        'use'             => 'Diesen Fechter verwenden',
-        'create'          => 'Fechter neu anlegen',
-        'create_inactive' => 'Fechter neu anlegen, deaktiviert',
-        'skip'            => 'Zeile überspringen',
+        'use'    => 'Diesen Fechter verwenden',
+        'create' => 'Fechter neu anlegen',
+        'skip'   => 'Zeile überspringen',
     ];
 
     /** @var array<string, Fencer> normalized name => fencer created during this run */
@@ -71,6 +77,13 @@ class ImportWriter
 
         foreach ($rows as $index => $row) {
             $line = $index + 2;
+            $anonymise = self::anonymises($row);
+
+            if ($row['aktion'] === 'create_inactive') {
+                $problems[] = "Zeile {$line} (\"{$row['name_datei']}\"): aktion \"create_inactive\" gibt es nicht mehr. "
+                    . 'Eine Zeile, die der Veranstalter schon anonymisiert hat, ist "create" mit anonymisieren = 1.';
+                continue;
+            }
 
             if (!in_array($row['aktion'], self::ACTIONS, true)) {
                 $problems[] = "Zeile {$line} (\"{$row['name_datei']}\"): aktion ist \"{$row['aktion']}\", erwartet "
@@ -78,8 +91,22 @@ class ImportWriter
                 continue;
             }
 
+            // Anonymising goes with a new record only. Somebody already on record is anonymised in
+            // the panel, on purpose and with a reason, not in passing by an import.
+            if ($anonymise && $row['aktion'] !== 'create') {
+                $problems[] = "Zeile {$line} (\"{$row['name_datei']}\"): anonymisieren geht nur zusammen mit \"create\".";
+                continue;
+            }
+
             if ($row['aktion'] === 'skip') {
                 continue;
+            }
+
+            // The mistake the column exists to end: the placeholder stored as somebody's name,
+            // which reads as anonymous and is marked as such nowhere.
+            if (!$anonymise && NameMatcher::normalize($row['name_datei']) === NameMatcher::normalize(Fencer::ANONYMOUS_NAME)) {
+                $problems[] = "Zeile {$line} (\"{$row['name_datei']}\"): Das ist der Platzhalter für einen anonymen "
+                    . 'Starter, kein Name. Bitte anonymisieren ankreuzen.';
             }
 
             if ($row['aktion'] === 'use' && $row['fechter_id'] === '') {
@@ -98,6 +125,16 @@ class ImportWriter
         }
 
         return $problems;
+    }
+
+    /**
+     * Whether a row asks for its new record to be anonymised from the start.
+     *
+     * @param  array<string, string>  $row
+     */
+    public static function anonymises(array $row): bool
+    {
+        return ($row['anonymisieren'] ?? '') === '1';
     }
 
     /**
@@ -165,7 +202,10 @@ class ImportWriter
                 $tournament->update(['format' => $format]);
             }
 
-            $group = $this->group($row, $tally);
+            // No club for an anonymous starter, neither looked up nor created from the file: once
+            // everything else is gone it is the last trait left, and in a small club it is enough
+            // to work back to a person. The same reason AnonymizeFencerAction clears it.
+            $group = self::anonymises($row) ? null : $this->group($row, $tally);
             $fencer = $this->fencer($row, $group, $tally);
 
             // The backstop under the planner's warning. A row can be set to "use" by hand after
@@ -190,7 +230,7 @@ class ImportWriter
                 'placement'     => (string) Placement::fromSource($row['platz']),
                 // The raw spelling keeps the location that the club assignment loses:
                 // "ESK Augsburg" rather than "Europäische Schwertkunst".
-                'fencer_group_name' => $row['verein_datei'] !== '' ? $row['verein_datei'] : null,
+                'fencer_group_name' => !self::anonymises($row) && $row['verein_datei'] !== '' ? $row['verein_datei'] : null,
             ]);
 
             $tally['resultIds'][$index] = $result->id;
@@ -273,26 +313,37 @@ class ImportWriter
         // appearance. Only names created in this very run are reused: an existing record is a
         // different question, and the reviewer answered it by writing "create".
         //
-        // The placeholder for a fencer nobody recorded is the exception. It is not a name, so two
-        // rows carrying it are two unknown people, not one person appearing twice - folding them
-        // together would pile unrelated placements onto a single record.
+        // An anonymous starter is the exception. There is no name, so two such rows are two
+        // unknown people, not one person appearing twice - folding them together would pile
+        // unrelated placements onto a single record.
         $key = NameMatcher::normalize($row['name_datei']);
-        $namesAPerson = $key !== NameMatcher::normalize(Fencer::ANONYMOUS_NAME);
+        $namesAPerson = !self::anonymises($row);
 
         if ($namesAPerson && isset($this->createdThisRun[$key])) {
             return $this->createdThisRun[$key];
         }
 
-        [$firstName, $lastName] = FencerResolver::splitName($row['name_datei']);
+        if ($namesAPerson) {
+            [$firstName, $lastName] = FencerResolver::splitName($row['name_datei']);
 
-        $fencer = Fencer::create([
-            // Rows already anonymised by the organisers are created disabled, following the
-            // procedure in the README.
-            'is_active'  => $row['aktion'] !== 'create_inactive',
-            'first_name' => $firstName,
-            'last_name'  => $lastName,
-            'group_id'   => $group?->id,
-        ]);
+            $fencer = Fencer::create([
+                'is_active'  => true,
+                'first_name' => $firstName,
+                'last_name'  => $lastName,
+                'group_id'   => $group?->id,
+            ]);
+        } else {
+            // Anonymised from the start, in the shape the panel's action leaves behind: no name
+            // stored at all, so the placeholder comes from Fencer::display_name and nothing can
+            // mistake it for somebody.
+            $fencer = Fencer::create([
+                'is_active'            => false,
+                'first_name'           => null,
+                'last_name'            => null,
+                'anonymized_at'        => now(),
+                'anonymization_reason' => Fencer::ANONYMISED_BY_ORGANISERS,
+            ]);
+        }
 
         $tally['fencers'][] = "{$fencer->display_name} ({$fencer->public_id})";
         $this->fencers->remember($fencer);

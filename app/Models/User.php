@@ -47,7 +47,7 @@ class User extends Authenticatable implements FilamentUser
      * panel worked here and would have answered 403 to every single person on a deployed system,
      * including whoever set it up, on the first day.
      *
-     * This is where readme point 5 begins: the question stops being "may you in" and becomes
+     * This is where step 5 of the readme's *The road to v1* begins: the question stops being "may you in" and becomes
      * "what may you do once you are".
      */
     public function canAccessPanel(Panel $panel): bool

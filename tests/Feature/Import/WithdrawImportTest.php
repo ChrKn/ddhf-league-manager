@@ -148,6 +148,55 @@ class WithdrawImportTest extends TestCase
         $this->assertSame(0, Result::count());
     }
 
+    public function test_an_anonymous_starter_goes_and_a_named_fencer_stays(): void
+    {
+        $import = ResultImport::create([
+            'status'           => ImportStatus::Draft,
+            'format'           => 'ddhf-vorlage',
+            'remember_aliases' => false,
+            'event_id'         => $this->event->id,
+        ]);
+
+        $path = 'ergebnisimport/vorlage-ohne-beispiel.xlsx';
+        Storage::disk('local')->put(
+            $path,
+            file_get_contents(__DIR__ . '/../../fixtures/import/vorlage-ohne-beispiel.xlsx'),
+        );
+
+        ResultImportSheet::create([
+            'result_import_id' => $import->id,
+            'original_name'    => 'vorlage-ohne-beispiel.xlsx',
+            'stored_path'      => $path,
+            'season_id'        => $this->season->id,
+        ]);
+
+        $runner = new ImportRunner();
+        $runner->plan($import->refresh());
+
+        // One row as the organisers would have sent it, anonymised before it reached us.
+        $anonymous = $import->rows()->orderBy('id')->first();
+        $anonymous->update(['action' => 'create', 'anonymize' => true, 'fencer_id' => null]);
+
+        $runner->apply($import->refresh());
+
+        $this->assertSame(1, Fencer::whereNotNull('anonymized_at')->count());
+        $named = Fencer::whereNull('anonymized_at')->count();
+
+        $summary = $runner->withdraw($import->refresh());
+
+        // Nothing can be using the anonymous one - the matcher never suggests it - and there is
+        // nobody left in it. Left standing, every withdrawal would leave another empty one behind.
+        $this->assertSame(1, $summary->removedPlaceholders);
+        $this->assertSame(0, Fencer::whereNotNull('anonymized_at')->count());
+
+        // A named fencer stays, and is reported, as before.
+        $this->assertSame($named, Fencer::whereNull('anonymized_at')->count());
+        $this->assertCount($named, $summary->orphanedFencers);
+
+        // And the review row keeps its tick, so applying again does the same thing.
+        $this->assertTrue($anonymous->fresh()->anonymize);
+    }
+
     public function test_a_tournament_with_somebody_elses_result_stays(): void
     {
         $import = $this->applied();

@@ -41,6 +41,15 @@ final class SiteUrl
     }
 
     /**
+     * A page in a language named outright rather than the one being rendered - for the sitemap,
+     * which lists both in one response.
+     */
+    public static function in(string $name, string $locale, mixed $parameters = []): string
+    {
+        return route(self::routeName($name, $locale), $parameters);
+    }
+
+    /**
      * The page currently being shown, in the other language.
      *
      * Falls back to that language's front page when the current route has no counterpart, which
@@ -52,13 +61,13 @@ final class SiteUrl
         $short = self::currentShortName();
 
         if ($short === null) {
-            return route(self::routeName('index', $locale));
+            return self::in('index', $locale);
         }
 
         $parameters = Route::current()?->parameters() ?? [];
         $query = request()->query();
 
-        return route(self::routeName($short, $locale), $parameters + $query);
+        return self::in($short, $locale, $parameters + $query);
     }
 
     /**

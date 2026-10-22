@@ -40,10 +40,12 @@ class FencerResolver
         // every further anonymous row, which would quietly pile unrelated results onto one
         // person - and as an exact match it would not even be flagged for review.
         //
-        // The name is checked as well as the flag. A row the organisers had already anonymised is
-        // imported with create_inactive, which disables the record but sets no anonymisation date,
-        // so the flag alone lets the placeholder back in. It did: the three anonymous starters of
-        // 2024 all landed on a placeholder that had stood for someone else since 2023.
+        // The name is checked as well as the flag. A row the organisers had already anonymised used
+        // to be imported as a disabled record called "Anonymer Fechter", with no anonymisation
+        // date, so the flag alone let the placeholder back in. It did: the three anonymous starters
+        // of 2024 all landed on a placeholder that had stood for someone else since 2023. Such rows
+        // are anonymised on import now, and the old records were by a migration; the name check
+        // stays as the guard against one getting in some other way.
         $this->candidates = $this->fencers->reject(
             fn (Fencer $fencer) => $fencer->isAnonymized() || $fencer->display_name === Fencer::ANONYMOUS_NAME,
         );

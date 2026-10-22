@@ -1,0 +1,5 @@
+# Keep for a year without asking again. The site links these files with their modification time in
+# the query string (App\Support\VersionedAsset), so a changed file arrives under a new address.
+<IfModule mod_headers.c>
+    Header set Cache-Control "public, max-age=31536000, immutable"
+</IfModule>

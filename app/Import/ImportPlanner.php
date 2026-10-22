@@ -4,6 +4,7 @@ namespace App\Import;
 
 use App\Import\Formats\DdhfTemplate;
 use App\Import\Formats\SheetFormat;
+use App\Models\Fencer;
 use App\Models\Result;
 use App\Models\Tournament;
 use App\Standings\Placement;
@@ -20,11 +21,11 @@ use RuntimeException;
 class ImportPlanner
 {
     /**
-     * The columns of a review row. Only "aktion" and the two id columns are meant to be edited;
-     * "hinweis" is the planner talking back.
+     * The columns of a review row. Only "aktion", "anonymisieren" and the two id columns are meant
+     * to be edited; "hinweis" is the planner talking back.
      */
     public const COLUMNS = [
-        'aktion', 'datei', 'turnier', 'turniersystem', 'platz', 'name_datei', 'verein_datei',
+        'aktion', 'anonymisieren', 'datei', 'turnier', 'turniersystem', 'platz', 'name_datei', 'verein_datei',
         'verband_datei',
         'fechter_id', 'fechter_vorschlag', 'fechter_guete', 'fechter_wert',
         'verein_id', 'verein_vorschlag', 'verein_guete', 'verein_wert',
@@ -213,12 +214,20 @@ class ImportPlanner
             $doubtful = $fencer->confidence === MatchConfidence::Unsure
                 || $group->confidence === MatchConfidence::Unsure;
 
+            // A starter the organisers had already anonymised. The placeholder names nobody, so
+            // there is nobody to find, and the row is a new record that is anonymised from the
+            // start - said in its own column rather than folded into the action, because "who is
+            // this" and "may they be named" are two questions. Whatever club the row carries is
+            // not written either; see ImportWriter.
+            $anonymous = NameMatcher::normalize($row['name']) === NameMatcher::normalize(Fencer::ANONYMOUS_NAME);
+
             // Otherwise: what the matcher believes, filled in. Confirming a filled row is quick;
             // filling one in per result is not, and a field of forty is forty answers to the same
             // question. What the belief is worth stays next to it - the confidence and the score
             // are on the row, and the guesses are counted again before anything is written.
             $intent = match (true) {
                 !$readable       => '',
+                $anonymous       => 'create',
                 $duplicate       => 'skip',
                 $doubtful        => '',
                 $fencer->found() => 'use',
@@ -227,6 +236,7 @@ class ImportPlanner
 
             $out[] = [
                 'aktion'            => $intent,
+                'anonymisieren'     => $anonymous ? '1' : '',
                 'datei'             => $row['sheet'],
                 // Empty where the tournament is still to be created. The panel fills it in at the
                 // moment of writing, when the record exists; a console run always has one.
@@ -248,6 +258,7 @@ class ImportPlanner
                 'verein_guete'      => $group->confidence->label(),
                 'verein_wert'       => $group->found() ? sprintf('%.2f', $group->score) : '',
                 'hinweis'           => match (true) {
+                    $anonymous => 'Vom Veranstalter anonymisiert — wird ohne Namen und Verein angelegt',
                     $duplicate => 'Ergebnis in diesem Turnier existiert bereits',
                     $doubtful  => 'Nur ein ungefährer Treffer — bitte ansehen',
                     default    => '',

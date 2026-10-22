@@ -69,6 +69,9 @@ This is the point at which the project replaces the tables it was built for.
 The destructive half of that is dealt with — see *Deleting* below — and what is left is the rest:
 who may see which parts, and whether everybody with an account needs the same panel.
 
+Roles are coming, but who is to be able to do what has not been defined yet. Until it is, there is
+nothing to build against: an account is the only gate, and everybody behind it sees everything.
+
 **6. A submission form real people can use.** Results reach the federation in whatever shape the
 organiser had to hand, and every one of them is rewritten into the template by hand. Most of that is
 avoidable: the common HEMA tournament programme's export in a handful of recognisable shapes, and a
@@ -399,6 +402,13 @@ empty; they come with the package.
    fencer, the club and the action are all editable in place. What the belief is worth stays next
    to it as a confidence and a score, *Nur unsichere Vorschläge* filters to the ones worth a second
    look, and how many there are is named again in the confirmation before the write.
+   **Anonymisieren** is a column of its own: a starter the organisers had already anonymised —
+   *Anonymer Fechter* in the file — is ticked in advance and becomes a new record with no name and
+   no club, marked as anonymised from the start, exactly as if it had gone through the panel's
+   action. Ticking it makes the row a new record; picking a fencer or *überspringen* clears it. A
+   row named *Anonymer Fechter* that is not ticked is refused at the write — that placeholder stored
+   as somebody's name is what this column replaced, and it read as anonymous everywhere while being
+   marked as such nowhere.
 5. **Apply.** One tournament per file, then the results. Its field size and system come from the
    file — those two are exactly what would otherwise be copied across by hand, and the field size is
    what every point in the standing is computed against. *Probelauf* does the whole thing and rolls
@@ -436,7 +446,9 @@ for — and a tournament that is left with none, since it only ever existed for 
 tournament that still holds a result somebody entered by hand stays.
 
 Fencers and clubs stay. A later import may be using them by now, and one without results bothers
-nobody; the summary names those that are left over so somebody can decide. Remembered club
+nobody; the summary names those that are left over so somebody can decide. **Anonymous starters
+are the exception** and go with their last result: no later import can be using one, since the
+matcher never suggests an anonymised record, and there is nobody left in it to keep. Remembered club
 spellings stay too — that a spelling means that club is still true afterwards.
 
 It refuses when **a result has been edited since the import was applied**. Somebody has corrected
@@ -457,9 +469,11 @@ php artisan import:results-prepare storage/exchange/2026/*.xlsx \
 php artisan import:results-apply storage/exchange/import-review.csv --dry-run
 ```
 
-Only `aktion` and the two id columns are meant to be edited; `hinweis` is the matcher talking back.
-`aktion` takes `use`, `create`, `create_inactive` (for a row the organisers had already anonymised)
-or `skip`. `--remember-aliases` records corrected club spellings so the next import resolves them on
+Only `aktion`, `anonymisieren` and the two id columns are meant to be edited; `hinweis` is the
+matcher talking back. `aktion` takes `use`, `create` or `skip`; `anonymisieren` is `1` for a row the
+organisers had already anonymised, and goes with `create` only. The former `create_inactive` is
+refused with a note saying so, and a file from before `anonymisieren` existed is still read, as if
+the column were empty. `--remember-aliases` records corrected club spellings so the next import resolves them on
 its own.
 
 A spelling names one club. The lookup folds a name before it compares — lower case, no punctuation,
@@ -501,12 +515,19 @@ mysqldump -u user ddhf_standings --default-character-set=utf8mb4 \
   --no-create-info --complete-insert \
   --result-file=inhalt.sql \
   disciplines divisions standings scoring_matrices seasons rulesets \
-  federations groups group_aliases group_locations fencers \
+  federations groups federation_group group_aliases group_locations fencers \
   events event_group tournaments results fencer_season
 ```
 
 That order is not alphabetical and should not be sorted: no row can be inserted before the row it
 points at.
+
+`federation_group` is the one that is easy to lose: it holds which federations a club belongs to.
+Nothing fails without it, and the standings even look right, because each result carries its own
+federation. But the clubs lose their memberships in the panel and the API, and the next import
+writes no federation onto anything - so its results score for nobody, and that is the first anybody
+notices. A table added by a later migration belongs in this list as well, unless it is named in
+*What must not travel*.
 
 `--result-file` rather than `> inhalt.sql`, and that is not a matter of taste: PowerShell writes a
 redirection in UTF-16 with a byte order mark in front of it, and MySQL then stops on the very first
@@ -534,6 +555,22 @@ php artisan make:filament-user
 
 The API key is created afterwards in the admin interface. Do not carry one over — see below.
 
+**The other way round: the live data into a local copy.** The same dump, taken on the server and
+fetched with `scp` into `storage/exchange/` - it is personal data, so delete it on the server
+afterwards. Locally, take a dump of what is there first, then:
+
+```shell
+php artisan migrate:fresh
+mysql -u <user> <database> --default-character-set=utf8mb4 -e "source storage/exchange/inhalt.sql"
+php artisan make:filament-user
+```
+
+`migrate:fresh` builds the schema the local code expects and empties every table, the local
+accounts included, which is why one is created again at the end. `--complete-insert` is what lets a
+local copy that is a migration ahead read a dump from a server that is not: the new columns take
+their defaults. The other direction does not work - a column the server has and the local code does
+not stops the import - so bring the code up to date first.
+
 ### What must not travel
 
 **`storage/exchange/` above all.** It holds the membership list, the working notes with people's real
@@ -550,6 +587,7 @@ The tables left out of the dump above are left out on purpose:
 | `sessions`, `cache`, `cache_locks`  | local state, meaningless elsewhere                           |
 | `exports`, `imports`, `job_batches` | they point at files that do not exist there                  |
 | `failed_import_rows`                | 759 rows of working material from here                       |
+| `result_imports`, `result_import_sheets`, `result_import_rows` | the panel's import history; it points at uploaded files that stay where they were uploaded |
 
 The results themselves are not encrypted, so `APP_KEY` does not matter for the data. It matters for
 sessions and cookies, and for `api_keys` — see below. The live system generates its own.
@@ -666,7 +704,32 @@ A header, and **not** a `Disallow: /` in `robots.txt`. Those are not two ways of
 thing. `Disallow` tells a crawler not to fetch the page — so it never reads the noindex either, and
 an address it learned about from somewhere else can still be listed, without a description, which
 is worse than either outcome on purpose. Letting it in and telling it to keep nothing is the
-instruction that works, which is why `public/robots.txt` stays open and a test says so.
+instruction that works, which is why `robots.txt` stays open and a test says so.
+
+The sitemap hangs off the same switch. `/sitemap.xml` lists every page in both languages — the
+front page, the two lists, every released standing and every tournament in one — with each address
+naming its German and English version; the search and filtered addresses are not in it. While the
+switch is off it answers 404, because a sitemap of pages that ask to be left out is a contradiction
+a search engine reports as an error. `robots.txt` is a route rather than a file for the same reason:
+its `Sitemap:` line needs an absolute address, which comes from `APP_URL`, and is only there while
+the site wants to be found. Nothing in `public/` may be called `robots.txt` again — the web server
+would hand that out and the route would never be asked.
+
+The same switch carries the site's machine-readable copy, meant for crawlers that feed language
+models. `/llms.txt` says in a few lines what the site is and where the data lies; `/data/standings.json`
+and `/data/tournaments.json` list what the two list pages list, and each standing and tournament has
+its own document at `/data/standings/{id}.json` and `/data/tournaments/{id}.json`, linked from its
+page with `<link rel="alternate" type="application/json">`. It is **what the page shows and nothing
+else**: only released seasons, anonymised entries without club or tournaments, hidden clubs left out,
+no `public_id` as a field — and the tournament list is built by `TournamentResults` for both, so
+the two cannot drift apart. One document per page, language-neutral, linked from both languages; a
+placement comes as its stored value with the German and the English word.
+
+What there deliberately is not: a download of everything, or anything per person. Either would put
+together in one request what the site keeps apart — every appearance of one fencer across every
+year — which is the same reason there is no page per fencer and the search stays out of the index.
+This is not the authenticated API either, which hands out fencers, clubs and federations in their
+own right.
 
 Switching it back on is one line in the environment and `php artisan optimize`. Nothing is deployed
 for it.
@@ -725,9 +788,11 @@ when one comes back. In the message that arrives, look at the headers: `spf=pass
   The first says mail leaves the machine; only the second says the whole path works.
 - **Anybody with an account can open the whole panel**, data browser included — there are no roles,
   and `User::canAccessPanel()` says so in as many words. Accounts are made by hand; that is the only
-  gate. Narrowing it is readme point 5.
+  gate. Narrowing it is step 5 of *The road to v1*.
 - **Decide whether the site is to be found.** `curl -sI https://…/ | grep -i x-robots-tag` says
   which way the switch is set. There is no right answer here, only a decision that has been made —
-  see *Not to be found yet*.
+  see *Not to be found yet*. Once it is on, submit `https://…/sitemap.xml` in the Search Console —
+  but only after the `noindex` meta has come out of the site's layout, or every address in it comes
+  back as *submitted URL marked noindex*.
 - **Create an API key** and hand it out; the one in `test.http` is local. Copy it off the screen while
   it is there — it is shown once and cannot be looked up afterwards, only replaced.

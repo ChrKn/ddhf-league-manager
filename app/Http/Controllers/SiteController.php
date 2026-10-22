@@ -6,9 +6,9 @@ use App\Models\Discipline;
 use App\Models\Division;
 use App\Models\Season;
 use App\Models\Tournament;
-use App\Standings\Placement;
 use App\Standings\FencerSearch;
 use App\Standings\SeasonRanking;
+use App\Standings\TournamentResults;
 use App\Support\SiteUrl;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -109,6 +109,7 @@ class SiteController extends Controller
 
         return view('site.standings', [
             'title'   => __('site.standings.title'),
+            'json'    => route('data.standings'),
             'rows'    => $seasons->map(fn (Season $season) => [
                 'discipline'  => $season->standing?->discipline?->name,
                 'division'    => $season->standing?->division?->name,
@@ -141,6 +142,7 @@ class SiteController extends Controller
 
         return view('site.standing', [
             'title'   => $season->display_name,
+            'json'    => route('data.standing', $season->public_id),
             'season'  => $season,
             'rows'    => $rows,
             'total'   => count($ranking['rows']),
@@ -180,6 +182,7 @@ class SiteController extends Controller
 
         return view('site.tournaments', [
             'title'   => __('site.tournaments.title'),
+            'json'    => route('data.tournaments'),
             'rows'    => $tournaments->map(fn (Tournament $tournament) => [
                 'name'        => $tournament->name ?: $tournament->display_name,
                 'date'        => $this->dateOf($tournament),
@@ -205,46 +208,23 @@ class SiteController extends Controller
                 'event',
                 'season.standing.discipline',
                 'season.standing.division',
-                'season.scoring_matrix',
-                'results.fencer',
-                'results.group',
+                ...TournamentResults::RELATIONS,
             ])
             ->firstOrFail();
 
-        $evaluator = SeasonRanking::evaluatorFor($tournament->season?->scoring_matrix);
-        $participants = (int) $tournament->participant_count;
-
-        // Ordered the way a result list reads: the ranks, then the rounds from the latest to the
-        // earliest, then whoever never left the pools. Through Placement, because sorted as text
-        // "last-16" would come before "last-8".
-        $results = $tournament->results
-            ->sortBy(fn ($result) => [
-                Placement::from((string) $result->placement)->sortKey(),
-                $result->fencer?->display_name ?? '',
-            ])
-            ->map(function ($result) use ($evaluator, $participants) {
-                $anonymized = (bool) $result->fencer?->isAnonymized();
-
-                $placement = Placement::from((string) $result->placement);
-
-                return [
-                    'placement' => $placement->label(App::getLocale()),
-                    // The order the table itself reads in: ranks, then rounds from the latest to
-                    // the earliest, then the pools. "4tel Finale" sorted as text lands under 4.
-                    'placement_sort' => $placement->sortKey(),
-                    'fencer'    => $result->fencer?->display_name,
-                    // The club as the database names it, and nothing at all for an anonymised
-                    // entry or a club that asked not to be shown. The raw spelling from the
-                    // source file stays out of this site either way.
-                    'group'  => $anonymized ? null : $result->group?->public_name,
-                    'points' => $evaluator?->pointsFor($participants, (string) $result->placement),
-                ];
-            })
-            ->values()
-            ->all();
+        $results = array_map(fn (array $result) => [
+            'placement' => $result['placement']->label(App::getLocale()),
+            // The order the table itself reads in: ranks, then rounds from the latest to the
+            // earliest, then the pools. "4tel Finale" sorted as text lands under 4.
+            'placement_sort' => $result['placement']->sortKey(),
+            'fencer' => $result['fencer'],
+            'group'  => $result['group'],
+            'points' => $result['points'],
+        ], TournamentResults::for($tournament));
 
         return view('site.tournament', [
             'title'      => $tournament->name ?: $tournament->display_name,
+            'json'       => route('data.tournament', $tournament->public_id),
             'tournament' => $tournament,
             'rows'       => $this->onlyClub($results, $request->query('verein')),
             'total'      => count($results),

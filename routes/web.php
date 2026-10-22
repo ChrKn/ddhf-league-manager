@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\DataController;
 use App\Http\Controllers\SiteController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\SetLocale;
 use App\Support\SiteUrl;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -51,6 +53,24 @@ Route::prefix('en')
     ->withoutMiddleware($stateless)
     ->name('site.en.')
     ->group(fn () => $site('en'));
+
+/*
+ * What a crawler is told, once for both languages. Outside the site.* names on purpose: SiteUrl
+ * reads anything under site. as a page with a counterpart in the other language, and these have
+ * none - the JSON under /data is one document per page, linked from both of its languages.
+ */
+Route::withoutMiddleware($stateless)->group(function () {
+    Route::get('/sitemap.xml', [SitemapController::class, 'sitemap'])->name('sitemap');
+    Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
+    Route::get('/llms.txt', [DataController::class, 'llms'])->name('llms');
+
+    Route::prefix('data')->name('data.')->group(function () {
+        Route::get('/standings.json', [DataController::class, 'standings'])->name('standings');
+        Route::get('/standings/{public_id}.json', [DataController::class, 'standing'])->name('standing');
+        Route::get('/tournaments.json', [DataController::class, 'tournaments'])->name('tournaments');
+        Route::get('/tournaments/{public_id}.json', [DataController::class, 'tournament'])->name('tournament');
+    });
+});
 
 /*
  * The data browser used to live here, at /tests, with no middleware at all - a page showing

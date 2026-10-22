@@ -20,9 +20,16 @@
     <title>{{ $title ?? __('site.brand_claim') }} · DDHF</title>
     <link rel="alternate" hreflang="de" href="{{ \App\Support\SiteUrl::alternate('de') }}">
     <link rel="alternate" hreflang="en" href="{{ \App\Support\SiteUrl::alternate('en') }}">
-    {{-- On every page, next to the X-Robots-Tag header - two places to forget rather than one. --}}
-    <meta name="robots" content="noindex,follow">
-    <link rel="icon" href="{{ asset('img/ddhf-signet.svg') }}" type="image/svg+xml">
+@if (isset($json) && config('site.indexable')){{--
+    The same page as JSON, where there is one. Only while the site wants to be found: until then
+    the address answers 404, and a link to it would be a link to nothing.
+
+    At the start of the line and with the comment attached, so that neither leaves a blank line or
+    its indentation in the head. --}}
+    <link rel="alternate" type="application/json" href="{{ $json }}">
+@endif
+    <meta name="robots" content="noindex,follow">{{-- On every page, next to the X-Robots-Tag header - two places to forget rather than one. --}}
+    <link rel="icon" href="{{ \App\Support\VersionedAsset::url('img/ddhf-signet.svg') }}" type="image/svg+xml">
     <style>
         :root {
             --bg: #f7f6f4;
@@ -129,7 +136,8 @@
             overflow: hidden;
         }
 
-        .panel + .panel { margin-top: 1.4rem; }
+        .panel + .panel,
+        .panel + form.controls { margin-top: 1.4rem; }
 
         .panel-head {
             display: flex;
@@ -337,7 +345,10 @@
 <header class="masthead">
     <div class="wrap">
         <a href="{{ $url('index') }}">
-            <img src="{{ asset('img/ddhf-logo.svg') }}"
+            {{-- The file's own size, which only fixes the ratio - CSS sets the height. With it the browser
+                 keeps the space free before the file arrives. --}}
+            <img src="{{ \App\Support\VersionedAsset::url('img/ddhf-logo.svg') }}"
+                 width="1418" height="437"
                  alt="Deutscher Dachverband für historisches Fechten">
         </a>
         <span class="claim">{{ __('site.brand_claim') }}</span>

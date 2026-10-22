@@ -170,6 +170,24 @@ class VisibilityTest extends TestCase
         }
     }
 
+    public function test_the_club_is_gone_from_the_json_as_well(): void
+    {
+        config(['site.indexable' => true]);
+
+        $this->shy->update(['is_public' => false]);
+
+        foreach ([
+            '/data/standings/' . $this->season->public_id . '.json',
+            '/data/tournaments/' . $this->tournament->public_id . '.json',
+        ] as $path) {
+            $this->get($path)
+                ->assertOk()
+                ->assertDontSee('Fechtschule Musterstadt')
+                ->assertSee('Erika Mustermann')
+                ->assertSee('Ochs Historische Kampfkünste');
+        }
+    }
+
     public function test_the_api_stops_resolving_a_hidden_club(): void
     {
         $this->shy->update(['is_public' => false]);

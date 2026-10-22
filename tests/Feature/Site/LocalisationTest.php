@@ -177,9 +177,11 @@ class LocalisationTest extends TestCase
                     $found,
                 );
 
+                // Images, and the page as JSON, belong to no language: there is one of each, linked
+                // from both.
                 $links = array_values(array_unique(array_filter(
                     $found[1],
-                    fn (string $href) => !str_starts_with($href, '/img'),
+                    fn (string $href) => !str_starts_with($href, '/img') && !str_starts_with($href, '/data/'),
                 )));
 
                 $toEnglish = array_filter($links, fn ($href) => $href === '/en' || str_starts_with($href, '/en/'));

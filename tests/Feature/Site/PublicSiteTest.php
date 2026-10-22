@@ -295,6 +295,20 @@ class PublicSiteTest extends TestCase
         }
     }
 
+    public function test_the_images_carry_their_version_and_the_logo_its_size(): void
+    {
+        // public/img/.htaccess lets browsers keep these for a year. Without the version a new
+        // logo would reach a returning reader only when that year is up.
+        $html = $this->get(route('site.index'))->assertOk()->getContent();
+
+        $logo = filemtime(public_path('img/ddhf-logo.svg'));
+        $signet = filemtime(public_path('img/ddhf-signet.svg'));
+
+        $this->assertStringContainsString("img/ddhf-logo.svg?v={$logo}\"", $html);
+        $this->assertStringContainsString("img/ddhf-signet.svg?v={$signet}\"", $html);
+        $this->assertMatchesRegularExpression('/<img src="[^"]*ddhf-logo\.svg[^"]*"\s+width="\d+" height="\d+"/', $html);
+    }
+
     public function test_the_tables_are_marked_up_for_sorting(): void
     {
         $this->fillTheField();

@@ -17,6 +17,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
+use Filament\Tables\Columns\CheckboxColumn;
 use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -171,6 +172,10 @@ class ReviewResultImport extends Page implements HasTable
 
         $lines = [$summary->results . ' Ergebnisse entfernt'];
 
+        if ($summary->removedPlaceholders > 0) {
+            $lines[] = $summary->removedPlaceholders . ' anonyme Starter mit entfernt, weil ohne Ergebnis';
+        }
+
         if ($summary->tournaments !== []) {
             $lines[] = count($summary->tournaments) . ' Turnier(e) mit entfernt, weil leer: '
                 . implode(', ', $summary->tournaments);
@@ -303,7 +308,8 @@ class ReviewResultImport extends Page implements HasTable
                     // Picking a person and leaving the row on "neu anlegen" would create a second
                     // record for somebody who is on the screen. The two belong together.
                     ->afterStateUpdated(fn (ResultImportRow $record, $state) => $record->update([
-                        'action' => $state ? 'use' : 'create',
+                        'action'    => $state ? 'use' : 'create',
+                        'anonymize' => $state ? false : $record->anonymize,
                     ])),
                 SelectColumn::make('action')
                     ->label('Damit tun')
@@ -316,6 +322,24 @@ class ReviewResultImport extends Page implements HasTable
                     ->afterStateUpdated(function (ResultImportRow $record, $state): void {
                         if (in_array($state, ImportWriter::CREATING, true)) {
                             $record->update(['fencer_id' => null]);
+                        } else {
+                            // Using somebody on record or skipping the row leaves nobody new to
+                            // anonymise.
+                            $record->update(['anonymize' => false]);
+                        }
+                    }),
+                // Its own column rather than a fourth action. "Who is this" and "may they be
+                // named" are two questions, and as one answer the second was the one that got
+                // missed: the record was made, disabled, and kept the placeholder as its name.
+                // Ticked, the row is always a new record - an anonymous starter is nobody on
+                // record - so it takes the action and the assignment with it.
+                CheckboxColumn::make('anonymize')
+                    ->label('Anonymisieren')
+                    ->tooltip('Vom Veranstalter anonymisiert: wird ohne Namen und Verein angelegt.')
+                    ->disabled(fn (): bool => !$this->editable())
+                    ->afterStateUpdated(function (ResultImportRow $record, $state): void {
+                        if ($state) {
+                            $record->update(['action' => 'create', 'fencer_id' => null]);
                         }
                     }),
                 TextColumn::make('fencer_quality')
@@ -412,6 +436,8 @@ class ReviewResultImport extends Page implements HasTable
                     $record->update([
                         'action'    => $action,
                         'fencer_id' => $action === 'create' ? null : $record->fencer_id,
+                        // Kept only where the row still makes somebody new.
+                        'anonymize' => $action === 'create' && $record->anonymize,
                     ]);
                 }
 
