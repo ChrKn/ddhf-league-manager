@@ -17,6 +17,7 @@ use App\Models\ScoringMatrix;
 use App\Models\Season;
 use App\Models\Standing;
 use App\Models\Tournament;
+use App\Models\TournamentFormat;
 use App\Standings\ScoringMode;
 use App\Standings\SeasonRanking;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -100,6 +101,9 @@ class WithdrawImportTest extends TestCase
             'original_name'    => 'vorlage-ohne-beispiel.xlsx',
             'stored_path'      => $path,
             'season_id'        => $this->season->id,
+            // What the mapping form settles.
+            'participants'         => 2,
+            'tournament_format_id' => TournamentFormat::where('name', 'Turnierbaum')->value('id'),
         ]);
 
         $import->refresh();
@@ -168,6 +172,9 @@ class WithdrawImportTest extends TestCase
             'original_name'    => 'vorlage-ohne-beispiel.xlsx',
             'stored_path'      => $path,
             'season_id'        => $this->season->id,
+            // What the mapping form settles.
+            'participants'         => 2,
+            'tournament_format_id' => TournamentFormat::where('name', 'Turnierbaum')->value('id'),
         ]);
 
         $runner = new ImportRunner();

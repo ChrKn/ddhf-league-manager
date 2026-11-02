@@ -4,7 +4,9 @@ namespace App\Models;
 
 use App\Traits\GenerateRandomString;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
+use InvalidArgumentException;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,20 +19,6 @@ class Tournament extends Model
 
     const RANDOMIZER_LENGTH = 8;
 
-    /**
-     * How a tournament was fenced, as the "Turniersystem" column of the submission template
-     * states it. Since every result says for itself what it is - a rank, a round, a pool exit -
-     * this decides nothing about the scoring. It stays because a list of rounds is unreadable
-     * without it, and because a bracket with no rounds recorded is worth finding.
-     *
-     * Tournaments taken in before the column existed carry nothing, which is honest.
-     */
-    const FORMATS = [
-        'Alle gegen alle',
-        'Turnierbaum',
-        'Turnierbaum mit Vorrunde',
-    ];
-
     protected $fillable = [
         'public_id',
         'name',
@@ -39,6 +27,8 @@ class Tournament extends Model
         'season_id',
         'ruleset_id',
         'region',
+        'tournament_format_id',
+        // By name, see format() below.
         'format',
         'start_date',
         'end_date',
@@ -111,6 +101,41 @@ class Tournament extends Model
     public function ruleset(): BelongsTo
     {
         return $this->belongsTo(Ruleset::class);
+    }
+
+    /**
+     * How it was fenced. Tournaments taken in before anybody recorded it carry nothing, which is
+     * honest.
+     */
+    public function tournamentFormat(): BelongsTo
+    {
+        return $this->belongsTo(TournamentFormat::class);
+    }
+
+    /**
+     * The system by its name, which is how every page, export and API response has always shown
+     * it - the column used to hold the name itself.
+     *
+     * Setting it takes a name from the list and nothing else. A name that is not there is a
+     * mistake to hear about, not a new entry: the list is kept in the panel.
+     */
+    protected function format(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): ?string => $this->tournamentFormat?->name,
+            set: function (?string $name): array {
+                $name = trim((string) $name);
+
+                if ($name === '') {
+                    return ['tournament_format_id' => null];
+                }
+
+                $id = TournamentFormat::where('name', $name)->value('id')
+                    ?? throw new InvalidArgumentException("Unbekanntes Turniersystem: {$name}");
+
+                return ['tournament_format_id' => $id];
+            },
+        );
     }
 
     public function results(): HasMany

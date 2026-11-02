@@ -6,6 +6,7 @@ use App\Models\Fencer;
 use App\Models\Group;
 use App\Models\Result;
 use App\Models\Tournament;
+use App\Models\TournamentFormat;
 use App\Standings\Placement;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -100,6 +101,15 @@ class ImportWriter
 
             if ($row['aktion'] === 'skip') {
                 continue;
+            }
+
+            // The review file of a console run is edited by hand, and the system is a choice from
+            // a list now rather than whatever was typed.
+            $system = trim($row['turniersystem'] ?? '');
+
+            if ($system !== '' && !TournamentFormat::where('name', $system)->exists()) {
+                $problems[] = "Zeile {$line} (\"{$row['name_datei']}\"): Turniersystem \"{$system}\" gibt es nicht. "
+                    . 'Zur Auswahl: ' . implode(', ', TournamentFormat::options()) . '.';
             }
 
             // The mistake the column exists to end: the placeholder stored as somebody's name,

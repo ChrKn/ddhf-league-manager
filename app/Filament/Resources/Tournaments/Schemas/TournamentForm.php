@@ -5,7 +5,6 @@ namespace App\Filament\Resources\Tournaments\Schemas;
 use App\Data\Regions;
 use App\Models\Event;
 use App\Models\Season;
-use App\Models\Tournament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -32,8 +31,13 @@ class TournamentForm
                     ->getOptionLabelFromRecordUsing(fn(Season $record) => $record->display_name)
                     ->required()
                     ->label('Saison'),
+                // Every point in the standing is computed against it, and the column has no null.
+                // Left optional, an empty field went to the database as null and came back as a
+                // server error instead of a sentence next to the field.
                 TextInput::make('participant_count')
-                    ->numeric()
+                    ->required()
+                    ->integer()
+                    ->minValue(1)
                     ->label('Teilnehmer'),
                 DatePicker::make('start_date')
                     ->label('Gefochten am')
@@ -52,10 +56,10 @@ class TournamentForm
                 Select::make('region')
                     ->options(Regions::all())
                     ->label('Region'),
-                Select::make('format')
-                    ->options(array_combine(Tournament::FORMATS, Tournament::FORMATS))
+                Select::make('tournament_format_id')
+                    ->relationship('tournamentFormat', 'name', fn ($query) => $query->ordered())
                     ->label('Turniersystem')
-                    ->hint('Wie der Ausrichter es angegeben hat. Wertungsrelevant ist es nicht mehr -
+                    ->hint('Weitere Systeme unter „Turniersysteme“. Wertungsrelevant ist es nicht mehr -
                         das steht am einzelnen Ergebnis - aber ohne die Angabe liest sich eine Liste
                         aus Runden statt Platzierungen wie ein Erfassungsfehler.'),
                 TextInput::make('public_id')

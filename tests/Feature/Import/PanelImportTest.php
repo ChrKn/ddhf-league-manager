@@ -2,8 +2,11 @@
 
 namespace Tests\Feature\Import;
 
+use App\Import\Formats\DdhfTemplate;
+use App\Import\ImportFiles;
 use App\Import\ImportRunner;
 use App\Import\ImportStatus;
+use App\Import\SheetIntake;
 use App\Models\Discipline;
 use App\Models\Division;
 use App\Models\Event;
@@ -18,6 +21,7 @@ use App\Models\ScoringMatrix;
 use App\Models\Season;
 use App\Models\Standing;
 use App\Models\Tournament;
+use App\Models\TournamentFormat;
 use App\Standings\ScoringMode;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -66,10 +70,18 @@ class PanelImportTest extends TestCase
      * An import with its files already up and mapped - what the panel has after the upload page
      * and the mapping page have been through.
      *
-     * @param  array<string, Season|null>  $files  fixture name => where it is headed
+     * The files go in the way the upload page takes them in, so the field size is the one the
+     * file proposes; the system is what the mapping form would have had chosen.
+     *
+     * @param  array<string, Season|null|array<string, Season>>  $files  fixture name => where it
+     *                                                                    is headed, per sheet for a workbook of several
      */
-    private function import(array $files, bool $partial = false, bool $withEvent = true): ResultImport
-    {
+    private function import(
+        array $files,
+        bool $partial = false,
+        bool $withEvent = true,
+        ?string $system = 'Turnierbaum',
+    ): ResultImport {
         $import = ResultImport::create([
             'status'           => ImportStatus::Draft,
             'format'           => 'ddhf-vorlage',
@@ -79,19 +91,30 @@ class PanelImportTest extends TestCase
         ]);
 
         foreach ($files as $fixture => $season) {
-            $path = "ergebnisimport/{$fixture}.xlsx";
-            Storage::disk('local')->put($path, file_get_contents(__DIR__ . "/../../fixtures/import/{$fixture}.xlsx"));
+            $intake = SheetIntake::read([$this->upload($fixture) => "{$fixture}.xlsx"], DdhfTemplate::class);
 
-            ResultImportSheet::create([
-                'result_import_id' => $import->id,
-                'original_name'    => "{$fixture}.xlsx",
-                'stored_path'      => $path,
-                'season_id'        => $season?->id,
-                'partial'          => $partial,
-            ]);
+            $this->assertTrue($intake->passes(), implode("\n", $intake->problems));
+
+            foreach ($intake->sheets as $sheet) {
+                ResultImportSheet::create($sheet + [
+                    'result_import_id'     => $import->id,
+                    'season_id'            => (is_array($season) ? $season[$sheet['worksheet']] : $season)?->id,
+                    'tournament_format_id' => $system ? TournamentFormat::where('name', $system)->value('id') : null,
+                    'partial'              => $partial,
+                ]);
+            }
         }
 
         return $import->refresh();
+    }
+
+    /** A fixture put where an upload lands, under a name of its own. */
+    private function upload(string $fixture): string
+    {
+        $path = 'ergebnisimport/' . $fixture . '-' . bin2hex(random_bytes(4)) . '.xlsx';
+        Storage::disk('local')->put($path, file_get_contents(__DIR__ . "/../../fixtures/import/{$fixture}.xlsx"));
+
+        return $path;
     }
 
     /** Decide every row, so the import may be applied. */
@@ -124,13 +147,166 @@ class PanelImportTest extends TestCase
         );
     }
 
-    public function test_the_file_says_how_large_the_field_was(): void
+    public function test_the_file_proposes_how_large_the_field_was(): void
+    {
+        $sheet = $this->import(['vorlage' => $this->season()])->sheets()->first();
+
+        $this->assertSame(5, $sheet->participants);
+        $this->assertSame(5, $sheet->stated_participants);
+        $this->assertSame(5, $sheet->row_count);
+    }
+
+    public function test_a_field_size_set_by_hand_survives_planning(): void
+    {
+        // The file says nine and lists two. Somebody looked, and two is right.
+        $import = $this->import(['teilnehmerzahl-weicht-ab' => $this->season()]);
+        $import->sheets()->update(['participants' => 2]);
+
+        $report = (new ImportRunner())->plan($import);
+
+        $this->assertTrue($report->agrees(), implode("\n", $report->problems));
+        $this->assertSame(2, $import->sheets()->first()->participants);
+        // Said, not held against it.
+        $this->assertStringContainsString('übernommen wird 2', implode("\n", $report->notes));
+
+        $this->decideAll($import);
+        (new ImportRunner())->apply($import);
+
+        $this->assertSame(2, Tournament::sole()->participant_count);
+    }
+
+    public function test_a_field_size_that_does_not_fit_the_rows_says_how_to_fix_it(): void
+    {
+        $import = $this->import(['vorlage' => $this->season()]);
+        $import->sheets()->update(['participants' => 6]);
+
+        $report = (new ImportRunner())->plan($import);
+
+        $this->assertFalse($report->agrees());
+        $this->assertStringContainsString('listet 5 Ergebnisse, festgelegt sind 6', implode("\n", $report->problems));
+    }
+
+    public function test_a_workbook_of_several_tournaments_gives_one_sheet_each(): void
+    {
+        $offen = $this->season();
+        $damen = $this->season('Damen+');
+
+        $import = $this->import(['zwei-blaetter' => ['Rapier Offen' => $offen, 'Rapier Damen+' => $damen]]);
+
+        $this->assertSame(
+            ['zwei-blaetter.xlsx · Rapier Offen', 'zwei-blaetter.xlsx · Rapier Damen+'],
+            $import->sheets->pluck('original_name')->all(),
+        );
+        // One file under both.
+        $this->assertCount(1, $import->sheets->pluck('stored_path')->unique());
+
+        $report = (new ImportRunner())->plan($import);
+        $this->assertTrue($report->agrees(), implode("\n", $report->problems));
+        $this->decideAll($import);
+        (new ImportRunner())->apply($import);
+
+        $this->assertSame(2, Tournament::count());
+        $this->assertSame(1, Tournament::where('season_id', $damen->id)->sole()->results()->count());
+    }
+
+    public function test_everything_missing_is_said_at_once(): void
+    {
+        $import = $this->import(
+            ['vorlage' => null, 'vorlage-ohne-beispiel' => null],
+            withEvent: false,
+            system: null,
+        );
+
+        $problems = implode("\n", (new ImportRunner())->plan($import)->problems);
+
+        $this->assertStringContainsString('keine Veranstaltung', $problems);
+        $this->assertStringContainsString('"vorlage.xlsx": Rangliste, Turniersystem fehlt.', $problems);
+        $this->assertStringContainsString('"vorlage-ohne-beispiel.xlsx": Rangliste, Turniersystem fehlt.', $problems);
+    }
+
+    public function test_the_system_chosen_in_the_mapping_goes_onto_the_tournament(): void
+    {
+        $import = $this->import(['vorlage-ohne-beispiel' => $this->season()], system: 'Doppel-K.-o. mit Vorrunde');
+
+        (new ImportRunner())->plan($import);
+        $this->decideAll($import);
+        (new ImportRunner())->apply($import);
+
+        $this->assertSame('Doppel-K.-o. mit Vorrunde', Tournament::sole()->format);
+    }
+
+    public function test_a_replaced_file_keeps_what_was_settled_for_it(): void
+    {
+        $season = $this->season();
+        $import = $this->import(['teilnehmerzahl-weicht-ab' => $season], system: 'Alle gegen alle');
+        $old = $import->sheets()->sole();
+        $old->update(['participants' => 2]);
+
+        (new ImportRunner())->plan($import);
+        $this->assertSame(2, $import->rows()->count());
+
+        $intake = ImportFiles::replace($import, $old->stored_path, [$this->upload('vorlage-ohne-beispiel') => 'korrigiert.xlsx']);
+
+        $this->assertTrue($intake->passes(), implode("\n", $intake->problems));
+
+        $sheet = $import->sheets()->sole();
+        $this->assertSame('korrigiert.xlsx', $sheet->original_name);
+        $this->assertSame($season->id, $sheet->season_id);
+        $this->assertSame('Alle gegen alle', $sheet->tournamentFormat->name);
+        // Entered by hand, so it stays.
+        $this->assertSame(2, $sheet->participants);
+        // The rows were matched against the old file.
+        $this->assertSame(0, $import->rows()->count());
+        $this->assertSame(ImportStatus::Draft, $import->refresh()->status);
+        Storage::disk('local')->assertMissing($old->stored_path);
+        Storage::disk('local')->assertExists($sheet->stored_path);
+    }
+
+    public function test_a_field_size_nobody_touched_follows_the_replaced_file(): void
+    {
+        $import = $this->import(['teilnehmerzahl-weicht-ab' => $this->season()]);
+        $old = $import->sheets()->sole();
+
+        ImportFiles::replace($import, $old->stored_path, [$this->upload('vorlage-ohne-beispiel') => 'neu.xlsx']);
+
+        $this->assertSame(2, $import->sheets()->sole()->participants);
+    }
+
+    public function test_a_replacement_that_is_not_readable_changes_nothing(): void
+    {
+        $import = $this->import(['vorlage' => $this->season()]);
+        $old = $import->sheets()->sole();
+        $upload = $this->upload('falsche-kopfzeile');
+
+        $intake = ImportFiles::replace($import, $old->stored_path, [$upload => 'falsch.xlsx']);
+
+        $this->assertFalse($intake->passes());
+        $this->assertStringContainsString('"falsch.xlsx": Die Kopfzeile entspricht nicht', implode("\n", $intake->problems));
+        $this->assertSame($old->id, $import->sheets()->sole()->id);
+        Storage::disk('local')->assertExists($old->stored_path);
+        Storage::disk('local')->assertMissing($upload);
+    }
+
+    public function test_a_file_can_be_added_later(): void
     {
         $import = $this->import(['vorlage' => $this->season()]);
 
-        (new ImportRunner())->plan($import);
+        $intake = ImportFiles::add($import, [$this->upload('vorlage-ohne-beispiel') => 'nachgereicht.xlsx']);
 
-        $this->assertSame(5, $import->sheets()->first()->participants);
+        $this->assertTrue($intake->passes());
+        $this->assertSame(['vorlage.xlsx', 'nachgereicht.xlsx'], $import->sheets()->pluck('original_name')->all());
+    }
+
+    public function test_a_shared_file_goes_only_with_its_last_sheet(): void
+    {
+        $import = $this->import(['zwei-blaetter' => ['Rapier Offen' => null, 'Rapier Damen+' => null]]);
+        [$first, $second] = $import->sheets->all();
+
+        $first->delete();
+        Storage::disk('local')->assertExists($second->stored_path);
+
+        $second->delete();
+        Storage::disk('local')->assertMissing($second->stored_path);
     }
 
     public function test_a_row_matching_on_both_sides_is_pre_filled(): void

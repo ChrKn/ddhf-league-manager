@@ -41,36 +41,23 @@ class ImportRunner
             return new ConsistencyReport(['Es ist keine Datei hochgeladen.']);
         }
 
-        if ($import->event_id === null) {
-            return new ConsistencyReport(['Für diesen Import ist keine Veranstaltung gewählt.']);
-        }
-
-        $unmapped = $import->sheets->filter(fn (ResultImportSheet $sheet) => !$sheet->season_id);
-
-        if ($unmapped->isNotEmpty()) {
-            return new ConsistencyReport($unmapped
-                ->map(fn (ResultImportSheet $sheet) => "\"{$sheet->original_name}\": keine Rangliste gewählt.")
-                ->values()
-                ->all());
-        }
-
-        try {
-            $rows = ImportPlanner::read($this->paths($import), SheetFormats::byKey($import->format));
-        } catch (RuntimeException $exception) {
-            return new ConsistencyReport([$exception->getMessage()]);
-        }
-
-        $this->recordWhatTheFilesSay($import, $rows);
-
-        $tournaments = [];
-        $partial = [];
+        // Everything the mapping form still lacks, at once. Answering one question only to be
+        // asked the next is the round trip this is meant to end.
         $problems = [];
 
-        foreach ($import->sheets as $sheet) {
-            $tournaments[$sheet->original_name] = $sheet->tournament;
+        if ($import->event_id === null) {
+            $problems[] = 'Für diesen Import ist keine Veranstaltung gewählt.';
+        }
 
-            if ($sheet->partial) {
-                $partial[] = $sheet->original_name;
+        foreach ($import->sheets as $sheet) {
+            $missing = array_keys(array_filter([
+                'Rangliste'      => !$sheet->season_id,
+                'Turniersystem'  => !$sheet->tournament_format_id,
+                'Teilnehmerzahl' => !$sheet->participants,
+            ]));
+
+            if ($missing !== []) {
+                $problems[] = "\"{$sheet->original_name}\": " . implode(', ', $missing) . ' fehlt.';
             }
 
             // The guard against running the same file twice. Because the importer creates the
@@ -89,11 +76,33 @@ class ImportRunner
 
         $problems = array_merge($problems, $this->collidingSheets($import));
 
-        $consistency = ImportPlanner::check($rows, $tournaments, $partial);
-        $problems = array_merge($problems, $consistency->problems);
-
         if ($problems !== []) {
-            return new ConsistencyReport($problems, $consistency->notes);
+            return new ConsistencyReport($problems);
+        }
+
+        try {
+            $rows = ImportPlanner::read($this->paths($import), SheetFormats::byKey($import->format));
+        } catch (RuntimeException $exception) {
+            return new ConsistencyReport([$exception->getMessage()]);
+        }
+
+        $tournaments = [];
+        $partial = [];
+        $sizes = [];
+
+        foreach ($import->sheets as $sheet) {
+            $tournaments[$sheet->original_name] = $sheet->tournament;
+            $sizes[$sheet->original_name] = $sheet->participants;
+
+            if ($sheet->partial) {
+                $partial[] = $sheet->original_name;
+            }
+        }
+
+        $consistency = ImportPlanner::check($rows, $tournaments, $partial, $sizes);
+
+        if ($consistency->problems !== []) {
+            return $consistency;
         }
 
         $this->store($import, (new ImportPlanner())->plan($rows, $tournaments));
@@ -227,17 +236,17 @@ class ImportRunner
     /**
      * The tournament this file becomes.
      *
-     * Its field size and system come from the file, which is the point of letting the import
-     * create it: those two are exactly what somebody would otherwise copy across by hand, and
-     * the field size is what every point in the standing is computed against.
+     * Its field size and system are the ones settled in the mapping form, which is the point of
+     * letting the import create it: those two are exactly what somebody would otherwise copy
+     * across by hand, and the field size is what every point in the standing is computed against.
      */
     private function tournamentFor(ResultImportSheet $sheet): Tournament
     {
         return Tournament::create([
-            'season_id'         => $sheet->season_id,
-            'event_id'          => $sheet->import->event_id,
-            'participant_count' => $sheet->participants,
-            'format'            => $sheet->format ?: null,
+            'season_id'            => $sheet->season_id,
+            'event_id'             => $sheet->import->event_id,
+            'participant_count'    => $sheet->participants,
+            'tournament_format_id' => $sheet->tournament_format_id,
         ]);
     }
 
@@ -252,7 +261,7 @@ class ImportRunner
         $import->sheets->each(fn (ResultImportSheet $sheet) => $sheet->setRelation('import', $import));
     }
 
-    /** @return array<string, string> file name as sent => where it lies */
+    /** @return array<string, array{0: string, 1: string|null}> sheet name => file and worksheet */
     private function paths(ResultImport $import): array
     {
         $paths = [];
@@ -264,31 +273,10 @@ class ImportRunner
                 throw new RuntimeException("Die hochgeladene Datei ist nicht mehr da: {$sheet->original_name}");
             }
 
-            $paths[$sheet->original_name] = $path;
+            $paths[$sheet->original_name] = [$path, $sheet->worksheet];
         }
 
         return $paths;
-    }
-
-    /**
-     * Field size and tournament system as the file states them, onto the sheet.
-     *
-     * The tournament is built from these later, so they are worth having where somebody can read
-     * them before that happens.
-     *
-     * @param  list<array<string, string>>  $rows
-     */
-    private function recordWhatTheFilesSay(ResultImport $import, array $rows): void
-    {
-        foreach ($import->sheets as $sheet) {
-            $ofSheet = array_values(array_filter($rows, fn ($row) => $row['sheet'] === $sheet->original_name));
-            $first = $ofSheet[0] ?? null;
-
-            $sheet->update([
-                'participants' => $first ? (int) $first['participants'] : null,
-                'format'       => $first && $first['system'] !== '' ? $first['system'] : null,
-            ]);
-        }
     }
 
     /**

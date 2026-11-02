@@ -105,7 +105,7 @@ class DataController extends Controller
         abort_unless(config('site.indexable'), 404);
 
         $tournaments = Tournament::query()
-            ->with(['event', 'season.standing.discipline', 'season.standing.division'])
+            ->with(['event', 'tournamentFormat', 'season.standing.discipline', 'season.standing.division'])
             ->withCount('results')
             ->public()
             ->get()

@@ -158,7 +158,7 @@ class SiteController extends Controller
     public function tournaments(Request $request)
     {
         $tournaments = Tournament::query()
-            ->with(['event', 'season.standing.discipline', 'season.standing.division'])
+            ->with(['event', 'tournamentFormat', 'season.standing.discipline', 'season.standing.division'])
             ->withCount('results')
             ->public()
             ->when($request->query('jahr'), fn ($query, $jahr) => $query->whereHas(

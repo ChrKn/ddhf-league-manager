@@ -52,8 +52,9 @@ class ResultImport extends Model
     protected static function booted(): void
     {
         static::deleting(function (ResultImport $import): void {
-            foreach ($import->sheets as $sheet) {
-                Storage::disk('local')->delete($sheet->stored_path);
+            // Unique, because a workbook of several tournaments is one file under several sheets.
+            foreach ($import->sheets->pluck('stored_path')->unique() as $path) {
+                Storage::disk('local')->delete($path);
             }
         });
     }

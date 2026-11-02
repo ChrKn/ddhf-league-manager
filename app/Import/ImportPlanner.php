@@ -52,7 +52,10 @@ class ImportPlanner
      * several files, and the protection against creating that person twice only reaches within a
      * single run.
      *
-     * @param  list<string>  $paths
+     * A file holding several tournaments is named once per tournament, as the path and the
+     * worksheet to read.
+     *
+     * @param  array<int|string, string|array{0: string, 1: string|null}>  $paths
      * @param  class-string<SheetFormat>  $format
      * @return list<array<string, string>>
      *
@@ -64,7 +67,8 @@ class ImportPlanner
         $seen = [];
 
         foreach ($paths as $sheet => $path) {
-            $read = $format::read($path);
+            [$path, $worksheet] = is_array($path) ? $path : [$path, null];
+            $read = $format::read($path, $worksheet);
 
             // Uploads carry the name they were sent under, because the stored file is named by
             // the system. A console run has only the path to go by.
@@ -101,15 +105,19 @@ class ImportPlanner
      * Ochsenstich is the case this exists for. The stated field size still has to be right,
      * because the points hang on it; only the row count is let go.
      *
-     * Where the tournament is still to be created, it has no count of its own to disagree with:
-     * it will take the one the file states. What is left to check is that the file agrees with
-     * itself, which is the half that catches a truncated sheet.
+     * Where the tournament is still to be created, it takes the field size decided in the mapping
+     * form, and that is what the rows are counted against. The file's own column is then only
+     * the proposal that size started from: where it says something else, or several things, that
+     * is noted rather than held against the import - somebody looked at it and decided.
+     *
+     * Without a decided size, which is how the console runs, the file has to agree with itself.
      *
      * @param  list<array<string, string>>  $rows
      * @param  array<string, Tournament|null>  $tournaments  keyed by file; null = will be created
      * @param  list<string>  $partial  files known to be recorded only in part
+     * @param  array<string, int|null>  $sizes  keyed by file: the field size decided for it
      */
-    public static function check(array $rows, array $tournaments, array $partial = []): ConsistencyReport
+    public static function check(array $rows, array $tournaments, array $partial = [], array $sizes = []): ConsistencyReport
     {
         $problems = [];
         $notes = [];
@@ -127,17 +135,39 @@ class ImportPlanner
             $stated = array_unique(array_column($ofSheet, 'participants'));
             $counted = count($ofSheet);
 
-            if (count($stated) > 1) {
-                $problems[] = "\"{$sheet}\": die Spalte Turniergröße nennt mehrere Werte: " . implode(', ', $stated);
+            if (!$tournament && ($sizes[$sheet] ?? null) !== null) {
+                $decided = (int) $sizes[$sheet];
+                $differing = array_values(array_filter($stated, fn ($value) => (int) $value !== $decided));
+
+                if ($differing !== []) {
+                    $notes[] = sprintf(
+                        '"%s": die Datei nennt als Turniergröße %s, übernommen wird %d.',
+                        $sheet,
+                        implode(', ', array_map(fn ($value) => $value === '' ? '(leer)' : $value, $stated)),
+                        $decided,
+                    );
+                }
+
+                if (in_array($sheet, $partial, true)) {
+                    $notes[] = sprintf('"%s": %d von %d Ergebnissen, als unvollständig angemeldet.', $sheet, $counted, $decided);
+                } elseif ($counted !== $decided) {
+                    $problems[] = sprintf(
+                        '"%s": die Datei listet %d Ergebnisse, festgelegt sind %d Teilnehmer. %s',
+                        $sheet,
+                        $counted,
+                        $decided,
+                        // More results than starters has only the one explanation.
+                        $counted > $decided
+                            ? 'Bitte die Teilnehmerzahl korrigieren.'
+                            : 'Bitte die Teilnehmerzahl korrigieren oder „Feld nur teilweise überliefert“ setzen.',
+                    );
+                }
+
                 continue;
             }
 
-            // One file is one tournament, so it was fenced one way. Two answers here would mean
-            // the placements of the file follow two different conventions at once.
-            $systems = array_unique(array_column($ofSheet, 'system'));
-
-            if (count($systems) > 1) {
-                $problems[] = "\"{$sheet}\": die Spalte Turniersystem nennt mehrere Werte: " . implode(', ', $systems);
+            if (count($stated) > 1) {
+                $problems[] = "\"{$sheet}\": die Spalte Turniergröße nennt mehrere Werte: " . implode(', ', $stated);
                 continue;
             }
 
@@ -241,7 +271,7 @@ class ImportPlanner
                 // Empty where the tournament is still to be created. The panel fills it in at the
                 // moment of writing, when the record exists; a console run always has one.
                 'turnier'           => (string) ($tournament?->public_id ?? ''),
-                'turniersystem'     => $row['system'],
+                'turniersystem'     => (string) ($tournament?->format ?? ''),
                 // Normalised here so the reviewer reads what will be stored: an organiser's
                 // "4tel Finale" arrives as last-8. Anything unreadable is handed on untouched,
                 // because the reviewer has to see what the file actually said.

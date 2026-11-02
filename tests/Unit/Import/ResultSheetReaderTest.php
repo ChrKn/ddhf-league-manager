@@ -86,13 +86,76 @@ class ResultSheetReaderTest extends TestCase
         ResultSheetReader::read($this->fixture('falsche-kopfzeile'));
     }
 
-    public function test_a_workbook_with_several_filled_sheets_is_rejected(): void
+    public function test_a_workbook_with_several_sheets_is_several_tournaments(): void
+    {
+        $file = ResultSheetReader::inspect($this->fixture('zwei-blaetter'));
+
+        $this->assertSame(['Rapier Offen', 'Rapier Damen+'], array_map(fn ($sheet) => $sheet->worksheet, $file->sheets));
+        $this->assertSame('Anna Beispiel', $file->sheets[0]->rows[0]['name']);
+        $this->assertSame('Berta Muster', $file->sheets[1]->rows[0]['name']);
+        $this->assertSame('zwei-blaetter · Rapier Damen+', $file->sheets[1]->label('zwei-blaetter'));
+    }
+
+    public function test_one_sheet_of_several_is_read_by_name(): void
+    {
+        $rows = ResultSheetReader::read($this->fixture('zwei-blaetter'), 'Rapier Damen+');
+
+        $this->assertSame(['Berta Muster'], array_column($rows, 'name'));
+    }
+
+    public function test_a_workbook_of_several_is_not_read_as_one(): void
     {
         // Reading only the first sheet would drop a whole tournament without a word.
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('mehrere gefüllte Blätter');
+        $this->expectExceptionMessage('mehrere Turniere');
 
         ResultSheetReader::read($this->fixture('zwei-blaetter'));
+    }
+
+    public function test_the_example_sheet_of_the_template_is_left_out(): void
+    {
+        $file = ResultSheetReader::inspect($this->fixture('vorlage-mit-beispielblatt'));
+
+        $this->assertCount(1, $file->sheets);
+        // The only tournament left, so the file is that tournament whatever its sheet is called.
+        $this->assertNull($file->sheets[0]->worksheet);
+        $this->assertCount(2, $file->sheets[0]->rows);
+        $this->assertStringContainsString('"Beispiel"', implode("\n", $file->notes));
+    }
+
+    public function test_the_template_as_the_federation_sends_it_has_seven_columns(): void
+    {
+        // No "Turniersystem" column: the template names the system in prose on the title line,
+        // and puts a list of systems to choose from next to the table.
+        $rows = ResultSheetReader::read($this->fixture('vorlage-ddhf'));
+
+        $this->assertSame(['Anna Beispiel', 'Berta Muster'], array_column($rows, 'name'));
+        $this->assertArrayNotHasKey('system', $rows[0]);
+    }
+
+    public function test_everything_wrong_is_collected(): void
+    {
+        $file = ResultSheetReader::inspect($this->fixture('mehrere-fehler'));
+
+        [$header, $sizes] = $file->sheets;
+
+        $this->assertStringContainsString('Kopfzeile', implode("\n", $header->problems));
+
+        // Readable, so a matter of notes rather than problems: the mapping form settles it.
+        $this->assertTrue($sizes->readable());
+        $this->assertSame(3, $sizes->participants);
+        $notes = implode("\n", $sizes->notes);
+        $this->assertStringContainsString('keine Zahl', $notes);
+        $this->assertStringContainsString('mehrere Werte: 3 (2 Zeilen), 4 (Zeile 4)', $notes);
+    }
+
+    public function test_an_empty_field_size_is_a_question_rather_than_a_problem(): void
+    {
+        $sheet = ResultSheetReader::inspect($this->fixture('ohne-turniergroesse'))->sheets[0];
+
+        $this->assertTrue($sheet->readable());
+        $this->assertNull($sheet->participants);
+        $this->assertStringContainsString('Turniergröße ist leer', implode("\n", $sheet->notes));
     }
 
     public function test_a_missing_file_is_reported(): void
@@ -158,7 +221,6 @@ class ResultSheetReaderTest extends TestCase
         $this->assertSame('Anna Beispiel', $rows[0]['name']);
         $this->assertSame('Musterfechter', $rows[0]['club']);
         $this->assertSame('2', $rows[0]['participants']);
-        $this->assertSame('Turnierbaum', $rows[0]['system']);
     }
 
     public function test_a_csv_saved_by_excel_keeps_its_umlauts(): void

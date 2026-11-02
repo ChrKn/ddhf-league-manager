@@ -8,6 +8,7 @@ use App\Filament\Resources\ResultImports\Pages\ListResultImports;
 use App\Filament\Resources\ResultImports\Pages\ReviewResultImport;
 use App\Import\ImportRunner;
 use App\Import\ImportStatus;
+use App\Import\ResultSheetReader;
 use App\Models\Discipline;
 use App\Models\Division;
 use App\Models\Event;
@@ -19,6 +20,7 @@ use App\Models\ScoringMatrix;
 use App\Models\Season;
 use App\Models\Standing;
 use App\Models\Tournament;
+use App\Models\TournamentFormat;
 use App\Models\User;
 use App\Standings\ScoringMode;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -87,6 +89,11 @@ class ResultImportPanelTest extends TestCase
             'original_name'    => "{$fixture}.xlsx",
             'stored_path'      => $path,
             'season_id'        => $mapped ? $this->season->id : null,
+            // As the upload takes the file in.
+            'participants'         => $read = ResultSheetReader::inspect(Storage::disk('local')->path($path))->sheets[0]->participants,
+            'stated_participants'  => $read,
+            'row_count'            => $read,
+            'tournament_format_id' => $mapped ? TournamentFormat::where('name', 'Turnierbaum')->value('id') : null,
         ]);
 
         return $import->refresh();
@@ -127,9 +134,87 @@ class ResultImportPanelTest extends TestCase
         $this->assertNotSame('Musterturnier Langschwert.xlsx', basename($sheet->stored_path));
 
         // Read on upload rather than at the review step, so the mapping page can already say what
-        // the file claims about itself.
+        // the file claims about itself. The system is not among it: that is chosen there.
         $this->assertSame(2, $sheet->participants);
-        $this->assertSame('Turnierbaum', $sheet->format);
+        $this->assertSame(2, $sheet->row_count);
+        $this->assertNull($sheet->tournament_format_id);
+    }
+
+    public function test_a_workbook_of_several_tournaments_is_taken_in_as_several(): void
+    {
+        Livewire::test(CreateResultImport::class)
+            ->fillForm([
+                'event_id' => $this->event->id,
+                'format'   => 'ddhf-vorlage',
+                'uploads'  => [$this->upload('zwei-blaetter', 'Rapier.xlsx')],
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(
+            ['Rapier.xlsx · Rapier Offen', 'Rapier.xlsx · Rapier Damen+'],
+            ResultImportSheet::pluck('original_name')->all(),
+        );
+    }
+
+    public function test_every_problem_of_every_file_is_said_at_the_upload(): void
+    {
+        Livewire::test(CreateResultImport::class)
+            ->fillForm([
+                'event_id' => $this->event->id,
+                'format'   => 'ddhf-vorlage',
+                'uploads'  => [
+                    $this->upload('falsche-kopfzeile', 'Irgendwas.xlsx'),
+                    $this->upload('mehrere-fehler', 'Mehreres.xlsx'),
+                ],
+            ])
+            ->call('create')
+            ->assertHasFormErrors(['uploads'])
+            ->assertNotified('Die Dateien lassen sich so nicht übernehmen');
+
+        $this->assertSame(0, ResultImport::count());
+    }
+
+    public function test_the_mapping_page_settles_system_and_field_size(): void
+    {
+        $import = $this->import(mapped: false);
+        $sheet = $import->sheets()->sole();
+
+        Livewire::test(EditResultImport::class, ['record' => $import->getKey()])
+            ->fillForm([
+                'sheets' => [
+                    "record-{$sheet->id}" => [
+                        'season_id'            => $this->season->id,
+                        'tournament_format_id' => TournamentFormat::where('name', 'Alle gegen alle')->value('id'),
+                        'participants'         => 2,
+                        'partial'              => false,
+                    ],
+                ],
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $sheet->refresh();
+        $this->assertSame('Alle gegen alle', $sheet->tournamentFormat->name);
+        $this->assertSame($this->season->id, $sheet->season_id);
+    }
+
+    public function test_a_file_can_be_replaced_from_the_mapping_page(): void
+    {
+        $import = $this->import();
+        $old = $import->sheets()->sole();
+
+        Livewire::test(EditResultImport::class, ['record' => $import->getKey()])
+            ->callAction('replaceFile', [
+                'file'    => $old->stored_path,
+                'uploads' => [$this->upload('vorlage-ohne-beispiel', 'Korrigiert.xlsx')],
+            ])
+            ->assertHasNoActionErrors()
+            ->assertNotified('1 Turnier(e) übernommen');
+
+        $sheet = $import->sheets()->sole();
+        $this->assertSame('Korrigiert.xlsx', $sheet->original_name);
+        $this->assertSame($this->season->id, $sheet->season_id);
     }
 
     public function test_a_file_that_is_not_the_template_is_refused_at_the_upload(): void

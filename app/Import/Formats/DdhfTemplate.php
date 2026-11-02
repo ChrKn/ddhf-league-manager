@@ -2,6 +2,7 @@
 
 namespace App\Import\Formats;
 
+use App\Import\ReadFile;
 use App\Import\ResultSheetReader;
 
 /**
@@ -25,16 +26,27 @@ class DdhfTemplate implements SheetFormat
     public static function recognises(string $path): bool
     {
         try {
-            static::read($path);
+            $file = static::inspect($path);
         } catch (\RuntimeException) {
             return false;
         }
 
-        return true;
+        foreach ($file->sheets as $sheet) {
+            if ($sheet->readable()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    public static function read(string $path): array
+    public static function inspect(string $path): ReadFile
     {
-        return ResultSheetReader::read($path);
+        return ResultSheetReader::inspect($path);
+    }
+
+    public static function read(string $path, ?string $worksheet = null): array
+    {
+        return ResultSheetReader::read($path, $worksheet);
     }
 }

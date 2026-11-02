@@ -104,7 +104,7 @@ class ResultImportRow extends Model
             'anonymisieren'     => $this->anonymize ? '1' : '',
             'datei'             => (string) $this->sheet?->original_name,
             'turnier'           => (string) $this->sheet?->tournament?->public_id,
-            'turniersystem'     => (string) $this->sheet?->format,
+            'turniersystem'     => (string) $this->sheet?->tournamentFormat?->name,
             'platz'             => $this->placement,
             'name_datei'        => $this->name,
             'verein_datei'      => (string) $this->club,

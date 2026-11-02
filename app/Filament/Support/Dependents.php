@@ -14,6 +14,7 @@ use App\Models\ScoringMatrix;
 use App\Models\Season;
 use App\Models\Standing;
 use App\Models\Tournament;
+use App\Models\TournamentFormat;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -96,6 +97,12 @@ class Dependents
             $record instanceof Event => [
                 'Turniere'  => fn (Event $e): int => Tournament::where('event_id', $e->id)->count(),
                 'Ausrichter' => fn (Event $e): int => $e->organizers()->count(),
+            ],
+
+            // RESTRICT into tournaments. An open import that has picked it is only set back to
+            // nothing, which asks again rather than losing anything.
+            $record instanceof TournamentFormat => [
+                'Turniere' => fn (TournamentFormat $f): int => $f->tournaments()->count(),
             ],
 
             $record instanceof ScoringMatrix => [

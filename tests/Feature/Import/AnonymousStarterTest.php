@@ -61,8 +61,12 @@ class AnonymousStarterTest extends TestCase
 
     public function test_the_migration_anonymises_the_placeholders_already_on_record(): void
     {
-        // Back to before it, with the data it found there.
-        $this->artisan('migrate:rollback', ['--step' => 1])->assertSuccessful();
+        // Back to before it, with the data it found there. By path rather than by step: later
+        // migrations rebuild tables on SQLite, which cannot switch off its foreign keys inside the
+        // test's transaction, and they have nothing to do with this one.
+        $this->artisan('migrate:rollback', [
+            '--path' => 'database/migrations/0026_01_01_000000_anonymise_the_placeholders_the_organisers_left.php',
+        ])->assertSuccessful();
 
         $tournament = Tournament::create([
             'season_id' => Season::create([

@@ -25,6 +25,7 @@ use App\Models\Result;
 use App\Models\Season;
 use App\Models\Standing;
 use App\Models\Tournament;
+use App\Models\TournamentFormat;
 use App\Standings\Placement;
 use App\Standings\SeasonRanking;
 use Illuminate\Http\Request;
@@ -67,7 +68,7 @@ class DataBrowser
                 'Fechter anonymisiert'       => Fencer::whereNotNull('anonymized_at')->count(),
                 'Ergebnisse ohne Verein'     => Result::whereNull('group_id')->count(),
                 'Ergebnisse ohne Verband'    => Result::whereNull('federation_id')->count(),
-                'Turniere ohne Turniersystem' => Tournament::whereNull('format')->count(),
+                'Turniere ohne Turniersystem' => Tournament::whereNull('tournament_format_id')->count(),
                 'Veranstaltungen ohne Turnier' => Event::doesntHave('tournaments')->count(),
             ],
         ];
@@ -356,7 +357,7 @@ class DataBrowser
     public function tournaments(Request $request)
     {
         $tournaments = Tournament::query()
-            ->with(['event', 'ruleset', 'season.standing.discipline', 'season.standing.division'])
+            ->with(['event', 'ruleset', 'tournamentFormat', 'season.standing.discipline', 'season.standing.division'])
             ->withCount('results')
             ->when($request->query('event'), fn ($query, $event) => $query->whereHas(
                 'event',
@@ -374,7 +375,10 @@ class DataBrowser
                 'season.standing.discipline',
                 fn ($sub) => $sub->where('public_id', $discipline)
             ))
-            ->when($request->query('format'), fn ($query, $format) => $query->where('format', $format))
+            ->when($request->query('format'), fn ($query, $format) => $query->whereHas(
+                'tournamentFormat',
+                fn ($sub) => $sub->where('name', $format)
+            ))
             ->get()
             ->sortByDesc(fn (Tournament $tournament) => [
                 $tournament->season?->year ?? 0,
@@ -428,10 +432,11 @@ class DataBrowser
                 ],
                 'format' => [
                     'label'   => 'Turniersystem',
-                    'options' => Tournament::whereNotNull('format')
-                        ->distinct()
-                        ->orderBy('format')
-                        ->pluck('format', 'format')
+                    // Only the systems some tournament uses: an option that filters down to nothing
+                    // is a question with no answer.
+                    'options' => TournamentFormat::has('tournaments')
+                        ->ordered()
+                        ->pluck('name', 'name')
                         ->all(),
                 ],
                 'event' => [

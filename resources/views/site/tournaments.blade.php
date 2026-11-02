@@ -21,7 +21,7 @@
                 @forelse ($rows as $row)
                     <tr>
                         {{-- Name and format are database values and stay German in both
-                             languages; the format is free text out of the import sheets. --}}
+                             languages; the format is an entry of the list kept in the panel. --}}
                         <td><a href="{{ $row['href'] }}">{{ $row['name'] }}</a></td>
                         <td data-sort="{{ $row['date_sort'] ?? '' }}">{{ $row['date'] ?? '—' }}</td>
                         <td>{{ $row['format'] ?? '—' }}</td>

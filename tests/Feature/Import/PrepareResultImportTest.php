@@ -102,13 +102,16 @@ class PrepareResultImportTest extends TestCase
         );
     }
 
-    public function test_the_review_file_carries_the_tournament_system(): void
+    public function test_the_review_file_shows_the_tournament_system(): void
     {
-        // Which convention the placements of a file follow depends on how it was fenced, so the
-        // system has to reach the tournament rather than being read and dropped.
+        // A console run goes into a tournament that exists, so the system is the tournament's.
+        // The file has no say in it: the template names it only in prose.
+        $tournament = $this->tournament(2);
+        $tournament->update(['format' => 'Turnierbaum']);
+
         $this->artisan('import:results-prepare', [
             'file'         => [$this->fixture('vorlage-ohne-beispiel')],
-            '--tournament' => ['vorlage-ohne-beispiel=' . $this->tournament(2)->public_id],
+            '--tournament' => ['vorlage-ohne-beispiel=' . $tournament->public_id],
             '--out'        => $this->out,
         ])->assertSuccessful();
 
@@ -116,17 +119,6 @@ class PrepareResultImportTest extends TestCase
             ['Turnierbaum', 'Turnierbaum'],
             array_column($this->reviewFile(), 'turniersystem'),
         );
-    }
-
-    public function test_a_file_naming_two_tournament_systems_stops_the_run(): void
-    {
-        $this->artisan('import:results-prepare', [
-            'file'         => [$this->fixture('zwei-turniersysteme')],
-            '--tournament' => ['zwei-turniersysteme=' . $this->tournament(2)->public_id],
-            '--out'        => $this->out,
-        ])->assertFailed();
-
-        $this->assertFileDoesNotExist($this->out);
     }
 
     public function test_a_file_without_a_tournament_stops_the_run(): void

@@ -370,8 +370,8 @@ in it. While it stands it appears in the standings list like any other.
 
 ## Importing results
 
-An import **brings in what is new**. It creates one tournament per file and writes the results
-underneath it. It never changes a result that is already there: correcting one is a different job,
+An import **brings in what is new**. It creates one tournament per result list — a file, or a sheet
+of a workbook — and writes the results underneath it. It never changes a result that is already there: correcting one is a different job,
 and the way to it is to take the import back and apply it again.
 
 **This is the only way results enter the system**, and it has a review step. The panel used to
@@ -388,11 +388,19 @@ empty; they come with the package.
 1. **Upload.** One import belongs to **one event**, chosen here, and holds all the files of it —
    the longsword, the sabre and the rapier of the same weekend. That is not only convenience:
    somebody who fenced several of them appears in several files, and only within a single import is
-   that person created once instead of once per appearance. Each file is read on upload, so a file
-   that is not the template — or a workbook holding two tournaments — is refused while the dialogue
-   is still open.
-2. **Map.** Per file: which standing and year, and whether the field is known to be recorded only
-   in part. The tournament is **not** created here.
+   that person created once instead of once per appearance. A file may hold one tournament or one
+   per sheet; organisers send both, and the template's own *Beispiel* sheet is skipped. Each file is
+   read on upload, to the end: a sheet that is not the template is refused while the dialogue is
+   still open, together with **everything else wrong with every file**, so a file goes back to its
+   sender once rather than once per mistake.
+2. **Map** (`/zuordnen`). Per tournament: which standing and year, **which tournament system**, **how
+   many took part**, and whether the field is known to be recorded only in part. The system is
+   chosen from the list under *Turniersysteme*, because the template only names it in prose on its
+   title line. The field size is proposed from the file's *Turniergröße* column and corrected here
+   where the file is wrong — the 2026 Dresdner Fechtschul listed 28 placements under a stated size
+   of 25. A file that turns out to be wrong is exchanged with *Datei ersetzen*, and one that comes
+   later is added with *Datei hinzufügen*; what was settled for a tournament that is in the new file
+   again stays. The tournament is **not** created here.
 3. **Match** (*Abgleichen*). Every line is compared against the database and stored as a row,
    **carrying what the matcher believes**: the fencer it found, the club, and what to do with them —
    *Vorschlag verwenden* where somebody was found, *Neu anlegen* where nobody was. The one row it
@@ -409,10 +417,10 @@ empty; they come with the package.
    row named *Anonymer Fechter* that is not ticked is refused at the write — that placeholder stored
    as somebody's name is what this column replaced, and it read as anonymous everywhere while being
    marked as such nowhere.
-5. **Apply.** One tournament per file, then the results. Its field size and system come from the
-   file — those two are exactly what would otherwise be copied across by hand, and the field size is
-   what every point in the standing is computed against. *Probelauf* does the whole thing and rolls
-   it back.
+5. **Apply.** One tournament per result list, then the results. Its field size and system are the
+   ones settled at step 2 — those two are exactly what would otherwise be copied across by hand, and
+   the field size is what every point in the standing is computed against. *Probelauf* does the
+   whole thing and rolls it back.
 
 **The template is accepted as a spreadsheet or as text.** A csv may be separated by semicolons,
 commas or tabs, and may be UTF-8 or the cp1252 that Excel writes on a German machine. None of that

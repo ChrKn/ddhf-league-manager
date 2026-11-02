@@ -11,38 +11,120 @@ use OpenSpout\Reader\XLSX\Reader as XlsxReader;
 use RuntimeException;
 
 /**
- * Reads a result sheet in the DDHF submission template.
+ * Reads result sheets in the DDHF submission template.
  *
- * One file holds one tournament. Rows two to six are template scaffolding - a title line, the
- * tournament system, a "Beispiel" block - and the data follows underneath:
+ * One worksheet holds one tournament. A file may bring a single one or one per sheet - organisers
+ * deliver both, and the template itself comes with an extra sheet called "Beispiel", which is
+ * left out. Rows two to six are template scaffolding - a title line, a "Beispiel" block - and the
+ * data follows underneath:
  *
- *     Platzierung | Name                  | Gruppe          | Verband | RL-Gender | Turnierzone | Turniergröße | Turniersystem
- *     "Berlin HEMA Cup Säbel" "Offen" …  |                 |         |           |             |               | Round Robin
+ *     Platzierung | Name                  | Gruppe          | Verband | RL-Gender | Turnierzone | Turniergröße
+ *     "Berlin HEMA Cup Säbel" "Offen" "2026" "Round Robin" …
  *     Beispiel
  *     Platzierung | Name                  | Gruppe          | Verband | RL-Gender | Turnierzone | Turniergröße
  *     1           | Karl Kaiser  | Hammerschlag Testhausen |         | Offen     | Nord        | 43
  *
- * The header is checked rather than assumed. This used to accept two further shapes, put
- * together by hand for a single event each; anything that does not match the template now has
- * to be copied into it before the import, which is the only way the columns stay meaningful.
+ * The header is checked rather than assumed; anything to the right of it is the template's own
+ * margin - arrows, the list of tournament systems to choose from - and is not read. How the
+ * tournament was fenced is chosen while mapping the files, not taken from the sheet: the template
+ * names it only in prose on the title line.
+ *
+ * Reading does not stop at the first thing wrong. inspect() says everything it finds, per sheet,
+ * so a file has to go back to its sender once rather than once per mistake.
  */
 class ResultSheetReader
 {
     /** The header the template has to start with. */
     public const COLUMNS = [
         'Platzierung', 'Name', 'Gruppe', 'Verband',
-        'RL-Gender', 'Turnierzone', 'Turniergröße', 'Turniersystem',
+        'RL-Gender', 'Turnierzone', 'Turniergröße',
     ];
 
-    /**
-     * @return list<array{sheet: string, row: int, placement: string, name: string, club: string,
-     *                    federation: string, region: string, participants: string, system: string}>
-     */
-    public static function read(string $path): array
-    {
-        $cells = self::cells($path);
+    /** The template's sheet of worked examples. Its rows are invented and never results. */
+    private const EXAMPLE_SHEET = 'beispiel';
 
-        self::assertTemplate($path, $cells[1] ?? []);
+    /**
+     * Every tournament in the file, each with what is wrong with it.
+     *
+     * @throws RuntimeException only when the file cannot be read at all
+     */
+    public static function inspect(string $path): ReadFile
+    {
+        $file = pathinfo($path, PATHINFO_FILENAME);
+        [$sheets, $notes] = self::tournamentSheets($path);
+
+        // A file with one tournament is that tournament, whatever its sheet happens to be called:
+        // "Tabelle1" in some, "Ergebnisse hier eintragen" in the template.
+        $single = count($sheets) === 1;
+
+        $read = [];
+
+        foreach ($sheets as $name => $cells) {
+            $worksheet = $single ? null : (string) $name;
+            $read[] = self::inspectSheet($worksheet, $cells, (new ReadSheet($worksheet, [], null))->label($file));
+        }
+
+        if ($read === []) {
+            $read[] = new ReadSheet(null, [], null, ['Die Datei enthält keine Ergebnisse.']);
+        }
+
+        return new ReadFile($read, $notes);
+    }
+
+    /**
+     * The rows of one tournament, for callers that take a file as it is or not at all.
+     *
+     * @param  string|null  $worksheet  which sheet, where the file holds several
+     * @return list<array{sheet: string, row: int, placement: string, name: string, club: string,
+     *                    federation: string, region: string, participants: string}>
+     *
+     * @throws RuntimeException when the sheet has a problem, or the file holds several and none
+     *                          was named
+     */
+    public static function read(string $path, ?string $worksheet = null): array
+    {
+        $file = self::inspect($path);
+
+        if ($worksheet === null && count($file->sheets) > 1) {
+            throw new RuntimeException(
+                "Die Arbeitsmappe enthält mehrere Turniere: {$path}\n"
+                . '  ' . implode(', ', array_map(fn (ReadSheet $sheet) => $sheet->worksheet, $file->sheets)) . "\n"
+                . 'Hier wird ein Turnier je Datei gelesen.'
+            );
+        }
+
+        $sheet = $worksheet === null
+            ? $file->sheets[0]
+            : (array_values(array_filter($file->sheets, fn (ReadSheet $s) => $s->worksheet === $worksheet))[0]
+                // A file of one tournament stores no sheet name; asked by name, it is still that one.
+                ?? (count($file->sheets) === 1 ? $file->sheets[0] : null));
+
+        if ($sheet === null) {
+            throw new RuntimeException("Das Blatt \"{$worksheet}\" ist in der Datei nicht mehr da: {$path}");
+        }
+
+        if (!$sheet->readable()) {
+            throw new RuntimeException($path . ":\n  " . implode("\n  ", $sheet->problems));
+        }
+
+        return $sheet->rows;
+    }
+
+    /**
+     * @param  array<int, list<string>>  $cells  keyed by row number
+     */
+    private static function inspectSheet(?string $worksheet, array $cells, string $label): ReadSheet
+    {
+        $found = array_slice($cells[1] ?? [], 0, count(self::COLUMNS));
+
+        if ($found !== self::COLUMNS) {
+            return new ReadSheet($worksheet, [], null, [
+                "Die Kopfzeile entspricht nicht der DDHF-Vorlage.\n"
+                . '  erwartet: ' . implode(' | ', self::COLUMNS) . "\n"
+                . '  gefunden: ' . (implode(' | ', $found) ?: '(leer)') . "\n"
+                . 'Ergebnisse in einem anderen Aufbau müssen vor dem Import in die Vorlage kopiert werden.',
+            ]);
+        }
 
         $rows = [];
 
@@ -53,9 +135,7 @@ class ResultSheetReader
             }
 
             $rows[] = [
-                // The sheet is called "Tabelle1" in every file, so the tournament is mapped by
-                // file name instead.
-                'sheet' => pathinfo($path, PATHINFO_FILENAME),
+                'sheet' => $label,
                 'row'   => $number,
                 // Handed through as written. A withdrawal shows up as text rather than a number,
                 // and that has to reach the reviewer instead of being dropped.
@@ -65,13 +145,82 @@ class ResultSheetReader
                 'federation'   => $row[3] ?? '',
                 'region'       => $row[5] ?? '',
                 'participants' => $row[6] ?? '',
-                // How it was fenced. It decides whether a placement is a rank or the worst place
-                // of an elimination round, so it belongs on the tournament rather than nowhere.
-                'system'       => $row[7] ?? '',
             ];
         }
 
-        return $rows;
+        if ($rows === []) {
+            return new ReadSheet($worksheet, [], null, ['Unter der Kopfzeile stehen keine Ergebnisse.']);
+        }
+
+        [$participants, $notes] = self::fieldSize($rows);
+
+        return new ReadSheet($worksheet, $rows, $participants, [], $notes);
+    }
+
+    /**
+     * What the field size column says, and everything odd about it.
+     *
+     * Every row repeats the same number in the template. Where they disagree or are missing, the
+     * person mapping the files decides, so this only proposes the most frequent value and says
+     * which rows said otherwise.
+     *
+     * @param  list<array<string, string|int>>  $rows
+     * @return array{0: int|null, 1: list<string>}
+     */
+    private static function fieldSize(array $rows): array
+    {
+        $byValue = [];
+        $notNumbers = [];
+        $empty = 0;
+
+        foreach ($rows as $row) {
+            $value = trim((string) $row['participants']);
+
+            if ($value === '') {
+                $empty++;
+            } elseif (ctype_digit($value) && (int) $value > 0) {
+                $byValue[(int) $value][] = $row['row'];
+            } else {
+                $notNumbers[] = "„{$value}“ (Zeile {$row['row']})";
+            }
+        }
+
+        $notes = [];
+
+        if ($notNumbers !== []) {
+            $notes[] = 'Turniergröße ist keine Zahl: ' . implode(', ', array_slice($notNumbers, 0, 5))
+                . (count($notNumbers) > 5 ? ' …' : '') . '.';
+        }
+
+        if ($byValue === []) {
+            $notes[] = 'Die Spalte Turniergröße ist leer. Die Teilnehmerzahl bitte beim Zuordnen eintragen.';
+
+            return [null, $notes];
+        }
+
+        // The most frequent value; on a tie the first one written, which is the winner's row.
+        uasort($byValue, fn (array $a, array $b) => count($b) <=> count($a));
+        $proposed = array_key_first($byValue);
+
+        if (count($byValue) > 1) {
+            $notes[] = 'Die Spalte Turniergröße nennt mehrere Werte: ' . implode(', ', array_map(
+                fn (int $value, array $lines) => "{$value} (" . self::lines($lines) . ')',
+                array_keys($byValue),
+                $byValue,
+            )) . ". Vorgeschlagen: {$proposed}.";
+        } elseif ($empty > 0) {
+            $notes[] = "Turniergröße fehlt in {$empty} Zeile(n). Vorgeschlagen: {$proposed}.";
+        }
+
+        return [$proposed, $notes];
+    }
+
+    /** @param list<int> $lines */
+    private static function lines(array $lines): string
+    {
+        return count($lines) === 1
+            ? "Zeile {$lines[0]}"
+            : count($lines) . ' Zeilen';
     }
 
     /**
@@ -100,23 +249,6 @@ class ResultSheetReader
         return trim((string) preg_replace('/\s*\(\d+\)\s*$/u', '', $name));
     }
 
-    /** @param list<string> $header */
-    private static function assertTemplate(string $path, array $header): void
-    {
-        $found = array_slice($header, 0, count(self::COLUMNS));
-
-        if ($found === self::COLUMNS) {
-            return;
-        }
-
-        throw new RuntimeException(
-            "Die Datei entspricht nicht der DDHF-Vorlage: {$path}\n"
-            . '  erwartete Spalten: ' . implode(' | ', self::COLUMNS) . "\n"
-            . '  gefunden:          ' . (implode(' | ', $found) ?: '(leer)') . "\n"
-            . 'Ergebnisse in einem anderen Aufbau müssen vor dem Import in die Vorlage kopiert werden.'
-        );
-    }
-
     /**
      * The delimiters a csv of this template turns up with. Excel writes the one the machine's
      * locale asks for, which is why the file itself has to be asked rather than the sender.
@@ -124,9 +256,11 @@ class ResultSheetReader
     private const DELIMITERS = [';', ',', "\t"];
 
     /**
-     * @return array<int, list<string>> keyed by the row number in the sheet
+     * The filled sheets that may hold a tournament, and a note on any that were left out.
+     *
+     * @return array{0: array<string, array<int, list<string>>>, 1: list<string>}
      */
-    private static function cells(string $path): array
+    private static function tournamentSheets(string $path): array
     {
         if (!is_file($path)) {
             throw new RuntimeException("Datei nicht gefunden: {$path}");
@@ -137,22 +271,19 @@ class ResultSheetReader
         $sheets = self::asWorkbook($path) ?? self::asDelimitedText($path);
 
         if ($sheets === null) {
-            throw new RuntimeException(
-                "Die Datei lässt sich weder als xlsx noch als CSV lesen: {$path}."
-            );
+            throw new RuntimeException('Die Datei lässt sich weder als xlsx noch als CSV lesen.');
         }
 
-        if (count($sheets) > 1) {
-            // One file, one tournament. Silently reading only the first sheet would drop
-            // results without anyone noticing.
-            throw new RuntimeException(
-                "Die Arbeitsmappe hat mehrere gefüllte Blätter: {$path}\n"
-                . '  ' . implode(', ', array_keys($sheets)) . "\n"
-                . 'Die Vorlage sieht ein Turnier je Datei vor.'
-            );
+        $notes = [];
+
+        foreach (array_keys($sheets) as $name) {
+            if (mb_strtolower(trim((string) $name)) === self::EXAMPLE_SHEET) {
+                unset($sheets[$name]);
+                $notes[] = "Das Blatt \"{$name}\" der Vorlage wurde übersprungen.";
+            }
         }
 
-        return reset($sheets) ?: [];
+        return [$sheets, $notes];
     }
 
     /**

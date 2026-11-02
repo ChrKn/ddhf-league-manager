@@ -2,15 +2,16 @@
 
 namespace App\Filament\Resources\ResultImports\Pages;
 
+use App\Filament\Resources\ResultImports\ImportMessages;
 use App\Filament\Resources\ResultImports\ResultImportResource;
 use App\Import\Formats\SheetFormats;
 use App\Import\ImportStatus;
+use App\Import\SheetIntake;
 use App\Models\ResultImport;
 use App\Models\ResultImportSheet;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class CreateResultImport extends CreateRecord
@@ -22,82 +23,54 @@ class CreateResultImport extends CreateRecord
     /**
      * The files are read here rather than at the review step.
      *
-     * A workbook that is not the template, or one holding two tournaments, is a mistake worth
-     * hearing about while the upload dialog is still open. Waiting until the review would mean
-     * choosing a season and an event for a file that was never going to be readable.
+     * A workbook that is not the template is a mistake worth hearing about while the upload
+     * dialog is still open. Waiting until the review would mean choosing a season and an event
+     * for a file that was never going to be readable. Everything wrong with every file is said at
+     * once, so the next upload is the last one.
      */
     protected function handleRecordCreation(array $data): Model
     {
-        $paths = $data['uploads'] ?? [];
         $names = $data['upload_names'] ?? [];
-        $format = SheetFormats::byKey($data['format']);
+        $uploads = [];
 
-        unset($data['uploads'], $data['upload_names']);
-
-        $sheets = [];
-
-        foreach ($paths as $path) {
+        foreach ($data['uploads'] ?? [] as $path) {
             // storeFileNamesIn keys the names it kept by the stored path, not by the key the
             // upload state uses. Looking them up by the latter silently found nothing, and every
             // file was recorded under the name the system gave it - the one nobody recognises.
-            $name = $names[$path] ?? basename($path);
+            $uploads[$path] = $names[$path] ?? basename($path);
+        }
 
-            try {
-                $rows = $format::read(Storage::disk('local')->path($path));
-            } catch (\RuntimeException $exception) {
-                $this->discard($paths);
+        unset($data['uploads'], $data['upload_names']);
 
-                throw ValidationException::withMessages([
-                    'data.uploads' => "\"{$name}\": " . $exception->getMessage(),
-                ]);
-            }
+        $intake = SheetIntake::read($uploads, SheetFormats::byKey($data['format']));
 
-            if ($rows === []) {
-                $this->discard($paths);
+        if (!$intake->passes()) {
+            SheetIntake::discard($uploads);
 
-                throw ValidationException::withMessages([
-                    'data.uploads' => "\"{$name}\": die Datei enthält keine Ergebnisse.",
-                ]);
-            }
+            ImportMessages::problems('Die Dateien lassen sich so nicht übernehmen', $intake->problems);
 
-            if (isset($sheets[$name])) {
-                // Their rows would otherwise share one mapping and land in the same tournament.
-                $this->discard($paths);
-
-                throw ValidationException::withMessages([
-                    'data.uploads' => "Zwei Dateien tragen den Namen \"{$name}\".",
-                ]);
-            }
-
-            $sheets[$name] = [
-                'original_name' => $name,
-                'stored_path'   => $path,
-                'participants'  => (int) $rows[0]['participants'],
-                'format'        => $rows[0]['system'] !== '' ? $rows[0]['system'] : null,
-            ];
+            throw ValidationException::withMessages([
+                'data.uploads' => count($intake->problems) === 1
+                    ? $intake->problems[0]
+                    : count($intake->problems) . ' Probleme in den Dateien, alle in der Meldung oben rechts.',
+            ]);
         }
 
         $import = ResultImport::create($data + ['status' => ImportStatus::Draft, 'user_id' => auth()->id()]);
 
-        foreach ($sheets as $sheet) {
+        foreach ($intake->sheets as $sheet) {
             ResultImportSheet::create($sheet + ['result_import_id' => $import->id]);
         }
 
         Notification::make()
-            ->title(count($sheets) . ' Datei(en) gelesen')
-            ->body('Jetzt je Datei Rangliste, Jahr und Veranstaltung wählen.')
+            ->title(count($intake->sheets) . ' Turnier(e) aus ' . count($uploads) . ' Datei(en) gelesen')
+            ->body('Jetzt je Turnier Rangliste, Turniersystem und Teilnehmerzahl festlegen.')
             ->success()
             ->send();
 
-        return $import;
-    }
+        ImportMessages::notes('Beim Zuordnen bitte ansehen', $intake->notes);
 
-    /** Nothing was created, so nothing may be left lying in the file store either. */
-    private function discard(array $paths): void
-    {
-        foreach ($paths as $path) {
-            Storage::disk('local')->delete($path);
-        }
+        return $import;
     }
 
     protected function getRedirectUrl(): string

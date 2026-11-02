@@ -18,8 +18,8 @@ use Filament\Tables\Table;
 /**
  * Taking in the results of an event, from the panel rather than a terminal.
  *
- * An import brings in what is new: it creates one tournament per file and writes the results
- * underneath it. It never changes a result that is already there. Correcting something already
+ * An import brings in what is new: it creates one tournament per file, or per sheet of a workbook,
+ * and writes the results underneath it. It never changes a result that is already there. Correcting something already
  * imported is a different job and will get its own form, so that whoever is at the screen can
  * tell from the screen which of the two they are doing.
  */
@@ -28,6 +28,8 @@ class ResultImportResource extends Resource
     protected static ?string $model = ResultImport::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowUpTray;
+
+    protected static string|null|\UnitEnum $navigationGroup = 'Systemverwaltung';
 
     protected static ?string $navigationLabel = 'Ergebnisimport';
 
