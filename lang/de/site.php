@@ -63,6 +63,13 @@ return [
         'empty_club'  => 'Aus diesem Verein ist hier niemand gewertet.',
         'count'       => 'Fechter',
         'of_total'    => 'von :total in dieser Rangliste',
+        'as_of'       => 'Stand nach :label',
+        'to_current'  => 'zum aktuellen Stand',
+        'up'          => '{1} einen Platz verbessert|[2,*] :count Plätze verbessert',
+        'down'        => '{1} einen Platz verloren|[2,*] :count Plätze verloren',
+        'same'        => 'unverändert',
+        'new'         => 'neu',
+        'new_long'    => 'neu in der Rangliste',
     ],
 
     'tournaments' => [
@@ -85,6 +92,7 @@ return [
 
     'columns' => [
         'rank'         => 'Platz',
+        'change'       => 'Veränderung',
         'standing'     => 'Rangliste',
         'fencer'       => 'Fechter',
         'club'         => 'Verein',
@@ -110,6 +118,9 @@ return [
         'submit' => 'Anzeigen',
         'reset'  => 'Zurücksetzen',
         'club'   => 'Verein',
+        // The table after each event, like the table after each matchday.
+        'step'         => 'Stand nach',
+        'step_current' => 'aktuell: :label',
     ],
 
     'footer' => [

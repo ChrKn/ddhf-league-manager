@@ -133,22 +133,45 @@ class SiteController extends Controller
             ->where('public_id', $public_id)
             ->firstOrFail();
 
-        $ranking = SeasonRanking::for($season);
+        // The table after each event, like the table after each matchday. Without ?stand, or with
+        // one that names no step, the table as it stands now - the address without the parameter
+        // shows what it always showed.
+        $steps = SeasonRanking::steps($season);
+        $chosen = $this->chosenStep($steps, $request->query('stand'));
+        $is_latest = $chosen === null || $chosen === array_key_last($steps);
+
+        $ranking = SeasonRanking::for($season, $is_latest ? null : $steps[$chosen]['tournament_ids']);
+        $rows = $ranking['rows'];
+
+        // Compared with the step before, once there is one. On the first step everybody would be
+        // new, which says nothing.
+        $index = $chosen ?? array_key_last($steps);
+        $show_changes = $index !== null && $index > 0;
+
+        if ($show_changes) {
+            $previous = SeasonRanking::for($season, $steps[$index - 1]['tournament_ids']);
+            $rows = SeasonRanking::withChanges($rows, $previous['rows']);
+        }
 
         // The whole table is ranked first and narrowed afterwards, so a row keeps the rank it
-        // earned against the full field. A club's fencers renumbered one to five would be a
-        // different and untrue statement.
-        $rows = $this->onlyClub($ranking['rows'], $request->query('verein'));
+        // earned against the full field - and the places it moved against the full field. A club's
+        // fencers renumbered one to five would be a different and untrue statement.
+        $shown = $this->onlyClub($rows, $request->query('verein'));
 
         return view('site.standing', [
             'title'   => $season->display_name,
             'json'    => route('data.standing', $season->public_id),
             'season'  => $season,
-            'rows'    => $rows,
-            'total'   => count($ranking['rows']),
+            'rows'    => $shown,
+            'total'   => count($rows),
             'mode'    => $ranking['mode'],
             'error'   => $ranking['error'],
-            'filters' => $this->clubFilter($ranking['rows']),
+            'show_changes' => $show_changes,
+            'step'    => $is_latest ? null : $steps[$chosen],
+            'filters' => [
+                ...$this->stepFilter($steps),
+                ...$this->clubFilter($rows),
+            ],
         ]);
     }
 
@@ -300,6 +323,53 @@ class SiteController extends Controller
         }
 
         return array_values(array_filter($rows, fn (array $row) => ($row['group'] ?? null) === $club));
+    }
+
+    /**
+     * Which of a standing's steps a reader asked for, by its key. Null for none or an unknown one.
+     *
+     * @param  list<array{key: string, label: string, tournament_ids: list<int>}>  $steps
+     */
+    private function chosenStep(array $steps, mixed $key): ?int
+    {
+        if (!is_string($key) || $key === '') {
+            return null;
+        }
+
+        foreach ($steps as $index => $step) {
+            if ($step['key'] === $key) {
+                return $index;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The table after each event, newest first. The empty choice is the table as it stands, so
+     * the latest step is not offered twice. Left out entirely where there is nothing earlier to
+     * go back to.
+     *
+     * @param  list<array{key: string, label: string, tournament_ids: list<int>}>  $steps
+     * @return array<string, array{label: string, all: string, options: array<string, string>}>
+     */
+    private function stepFilter(array $steps): array
+    {
+        if (count($steps) < 2) {
+            return [];
+        }
+
+        $options = [];
+
+        foreach (array_reverse(array_slice($steps, 0, -1)) as $step) {
+            $options[$step['key']] = $step['label'];
+        }
+
+        return ['stand' => [
+            'label'   => __('site.filters.step'),
+            'all'     => __('site.filters.step_current', ['label' => $steps[array_key_last($steps)]['label']]),
+            'options' => $options,
+        ]];
     }
 
     /**

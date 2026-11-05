@@ -42,16 +42,7 @@ final class ScoringMatrixEvaluator
      */
     public function pointsFor(int $participant_count, string $placement): int
     {
-        // The rules are sorted by descending participant threshold, so the first match is the
-        // most specific one.
-        $applicable_rule = null;
-
-        foreach ($this->matrix as $rule) {
-            if ($participant_count >= ($rule['participants']['min'] ?? 0)) {
-                $applicable_rule = $rule;
-                break;
-            }
-        }
+        $applicable_rule = $this->ruleFor($participant_count);
 
         if ($applicable_rule === null) {
             return 0;
@@ -73,6 +64,32 @@ final class ScoringMatrixEvaluator
         }
 
         return $this->pointsForRound($applicable_rule, $placement->round_size);
+    }
+
+    /**
+     * Whether a tournament of this size counts at all.
+     *
+     * A field smaller than the smallest threshold in the matrix earns nobody anything: the
+     * tournament is fenced and recorded, but not scored.
+     */
+    public function scores(int $participant_count): bool
+    {
+        return $this->ruleFor($participant_count) !== null;
+    }
+
+    /**
+     * The rules are sorted by descending participant threshold, so the first match is the most
+     * specific one.
+     */
+    private function ruleFor(int $participant_count): ?array
+    {
+        foreach ($this->matrix as $rule) {
+            if ($participant_count >= ($rule['participants']['min'] ?? 0)) {
+                return $rule;
+            }
+        }
+
+        return null;
     }
 
     /**

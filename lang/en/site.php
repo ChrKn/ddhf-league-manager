@@ -66,6 +66,13 @@ return [
         'empty_club'  => 'Nobody from this club is scored here.',
         'count'       => 'fencers',
         'of_total'    => 'of :total in this standing',
+        'as_of'       => 'Standings after :label',
+        'to_current'  => 'current standings',
+        'up'          => '{1} up one place|[2,*] up :count places',
+        'down'        => '{1} down one place|[2,*] down :count places',
+        'same'        => 'unchanged',
+        'new'         => 'new',
+        'new_long'    => 'new in this standing',
     ],
 
     'tournaments' => [
@@ -88,6 +95,7 @@ return [
 
     'columns' => [
         'rank'         => 'Rank',
+        'change'       => 'Change',
         'standing'     => 'Standing',
         'fencer'       => 'Fencer',
         'club'         => 'Club',
@@ -113,6 +121,8 @@ return [
         'submit' => 'Show',
         'reset'  => 'Reset',
         'club'   => 'Club',
+        'step'         => 'Standings after',
+        'step_current' => 'current: :label',
     ],
 
     'footer' => [

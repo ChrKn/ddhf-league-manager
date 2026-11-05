@@ -2,6 +2,7 @@
 
 @php
     $has_qualifier = collect($rows)->contains(fn ($row) => $row['qualifier'] !== null);
+    $columns = 5 + ($has_qualifier ? 1 : 0) + ($show_changes ? 1 : 0);
 @endphp
 
 @section('content')
@@ -12,6 +13,13 @@
         @if ($mode) · {{ __('site.standing.scoring') }}: {{ $mode->label() }} @endif
         · <a href="{{ $url('standings') }}">{{ __('site.standing.all') }}</a>
     </p>
+
+    @if ($step)
+        <div class="note">
+            {{ __('site.standing.as_of', ['label' => $step['label']]) }}
+            · <a href="{{ url()->current() }}">{{ __('site.standing.to_current') }}</a>
+        </div>
+    @endif
 
     @if ($error)
         <div class="note">{{ $error }}</div>
@@ -25,6 +33,9 @@
                 <thead>
                 <tr>
                     <th scope="col">{{ __('site.columns.rank') }}</th>
+                    @if ($show_changes)
+                        <th scope="col"><span aria-hidden="true">±</span><span class="visually-hidden">{{ __('site.columns.change') }}</span></th>
+                    @endif
                     <th scope="col">{{ __('site.columns.fencer') }}</th>
                     <th scope="col">{{ __('site.columns.club') }}</th>
                     <th class="num" scope="col">{{ __('site.columns.points') }}</th>
@@ -38,6 +49,24 @@
                 @forelse ($rows as $row)
                     <tr>
                         <td class="rank">{{ $row['rank'] }}</td>
+                        @if ($show_changes)
+                            {{-- Sorted so that the biggest climbers come first and the
+                                 newcomers last, behind everybody who was already there. --}}
+                            @php
+                                $change = $row['change'];
+                            @endphp
+                            <td class="change" data-sort="{{ $change === null ? 100000 : -$change }}">
+                                @if ($change === null)
+                                    <span class="new" title="{{ __('site.standing.new_long') }}">{{ __('site.standing.new') }}</span>
+                                @elseif ($change > 0)
+                                    <span class="up" title="{{ trans_choice('site.standing.up', $change) }}"><span aria-hidden="true">▲ {{ $change }}</span><span class="visually-hidden">{{ trans_choice('site.standing.up', $change) }}</span></span>
+                                @elseif ($change < 0)
+                                    <span class="down" title="{{ trans_choice('site.standing.down', -$change) }}"><span aria-hidden="true">▼ {{ -$change }}</span><span class="visually-hidden">{{ trans_choice('site.standing.down', -$change) }}</span></span>
+                                @else
+                                    <span class="same" title="{{ __('site.standing.same') }}"><span aria-hidden="true">–</span><span class="visually-hidden">{{ __('site.standing.same') }}</span></span>
+                                @endif
+                            </td>
+                        @endif
                         <td class="{{ $row['anonymized'] ? 'anon' : '' }}">{{ $row['name'] }}</td>
                         <td>{{ $row['group'] ?? '—' }}</td>
                         <td class="num points">{{ $row['points'] }}</td>
@@ -89,7 +118,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ $has_qualifier ? 6 : 5 }}">
+                        <td colspan="{{ $columns }}">
                             <span class="empty">
                                 {{ request()->query('verein')
                                     ? __('site.standing.empty_club')

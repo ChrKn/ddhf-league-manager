@@ -11,7 +11,7 @@
         <div class="control">
             <label for="filter-{{ $name }}">{{ $filter['label'] }}</label>
             <select id="filter-{{ $name }}" name="{{ $name }}">
-                <option value="">{{ __('site.filters.all') }}</option>
+                <option value="">{{ $filter['all'] ?? __('site.filters.all') }}</option>
                 @foreach ($filter['options'] as $value => $label)
                     <option value="{{ $value }}" @selected(request()->query($name) == $value)>{{ $label }}</option>
                 @endforeach

@@ -21,11 +21,13 @@ final class StandingCalculator
      * The season is expected to come with tournaments.results.fencer and tournaments.ruleset
      * eager loaded.
      *
+     * @param  list<int>|null  $tournament_ids  Only these tournaments, for the table as it stood
+     *                                          earlier in the season. Null for all of them.
      * @return list<array{fencer: \App\Models\Fencer, group: string|null, points: int, qualifier: string|null, results: list<array<string, mixed>>}>
      */
-    public function calculate(Season $season): array
+    public function calculate(Season $season, ?array $tournament_ids = null): array
     {
-        $scored = $this->scoreResults($season);
+        $scored = $this->scoreResults($season, $tournament_ids);
         $aggregator = $this->mode->aggregator();
         $standing = [];
 
@@ -97,8 +99,10 @@ final class StandingCalculator
      *
      * @return array<int, array{fencer: \App\Models\Fencer, group: string|null, results: list<ScoredResult>}>
      */
-    private function scoreResults(Season $season): array
+    private function scoreResults(Season $season, ?array $tournament_ids): array
     {
+        $only = $tournament_ids === null ? null : array_flip($tournament_ids);
+
         $scored = [];
         // Resolved once: the standing is a ranking of this federation's members, and every
         // result is measured against it. Null when the federation is not on record, in which
@@ -112,6 +116,10 @@ final class StandingCalculator
         [$undecided, $chosen] = $this->divisionChoice($season);
 
         foreach ($season->tournaments as $tournament) {
+            if ($only !== null && !isset($only[$tournament->id])) {
+                continue;
+            }
+
             $participant_count = $tournament->participant_count ?? 0;
 
             foreach ($tournament->results as $result) {

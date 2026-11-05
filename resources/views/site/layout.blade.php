@@ -39,6 +39,8 @@
             --line: #dedcd6;
             --accent: #cc1d1b;       /* 5.59 on white */
             --accent-soft: #fdf0ef;
+            --up: #1a7f37;           /* 5.08 on white, 4.57 on --accent-soft */
+            --down: #b42318;         /* 6.57 on white, 5.91 on --accent-soft */
             --gold: #ffdd00;         /* only ever on --dark */
             --dark: #1a1a1a;
             --on-dark: #ffffff;
@@ -55,6 +57,8 @@
                 --line: #333330;
                 --accent: #e8524f;   /* 5.05 on #141414; the theme red is 3.30 and fails */
                 --accent-soft: #2a1a1a;
+                --up: #4cc06f;       /* 7.21 on --panel */
+                --down: #f07070;     /* 5.76 on --panel */
                 --shadow: none;
             }
         }
@@ -186,6 +190,21 @@
         td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
         td.rank { width: 3rem; font-variant-numeric: tabular-nums; color: var(--muted); }
         td.points { font-weight: 650; font-variant-numeric: tabular-nums; }
+
+        /* Places moved since the step before. Arrow and number always, so the colour is never the
+           only thing saying which way. */
+        td.change { width: 3.5rem; white-space: nowrap; font-size: .88rem; font-variant-numeric: tabular-nums; }
+        .change .up { color: var(--up); font-weight: 650; }
+        .change .down { color: var(--down); font-weight: 650; }
+        .change .same { color: var(--muted); }
+        .change .new {
+            display: inline-block; padding: 0 .4rem; border: 1px solid var(--line); border-radius: 999px;
+            font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .03em;
+        }
+        .visually-hidden {
+            position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+            clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+        }
 
         .empty { color: var(--muted); }
         .anon { color: var(--muted); font-style: italic; }
