@@ -124,12 +124,29 @@ class LocalisationTest extends TestCase
         $this->get('/en/ddhf-tournaments/' . $this->tournament->public_id)->assertNotFound();
     }
 
-    public function test_every_page_asks_not_to_be_indexed_in_its_own_head(): void
+    public function test_every_page_asks_not_to_be_indexed_in_its_own_head_while_the_switch_is_off(): void
     {
-        // As well as the X-Robots-Tag header, and independent of the switch behind it.
-        config(['site.indexable' => true]);
+        // As well as the X-Robots-Tag header.
+        config(['site.indexable' => false]);
 
         foreach (array_merge(array_keys($this->pages()), array_values($this->pages()), ['/suche?q=xy', '/en/search?q=xy']) as $path) {
+            $this->get($path)
+                ->assertOk()
+                ->assertSee('<meta name="robots" content="noindex,follow">', false);
+        }
+    }
+
+    public function test_only_the_search_keeps_asking_once_the_switch_is_on(): void
+    {
+        config(['site.indexable' => true]);
+
+        foreach (array_merge(array_keys($this->pages()), array_values($this->pages())) as $path) {
+            $this->get($path)
+                ->assertOk()
+                ->assertDontSee('name="robots"', false);
+        }
+
+        foreach (['/suche?q=xy', '/en/search?q=xy'] as $path) {
             $this->get($path)
                 ->assertOk()
                 ->assertSee('<meta name="robots" content="noindex,follow">', false);

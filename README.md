@@ -705,8 +705,10 @@ fires looks like from the outside.
 The site is finished before it is meant to be public, and those are two different days. In between
 it answers to anybody who knows the address, and it should still not turn up in a search result —
 so `SITE_INDEXABLE=false` in the environment, which sends `X-Robots-Tag: noindex, follow` with
-every response. The site's pages also carry `<meta name="robots" content="noindex,follow">` in
-their head, regardless of the switch — two places to forget rather than one.
+every response. The site's pages then also carry `<meta name="robots" content="noindex,follow">` in
+their head — two places to forget rather than one. The person search keeps the meta whichever way
+the switch is set: it answers to a name, and that is findable on the site, not through a search
+engine.
 
 A header, and **not** a `Disallow: /` in `robots.txt`. Those are not two ways of saying the same
 thing. `Disallow` tells a crawler not to fetch the page — so it never reads the noindex either, and
@@ -800,7 +802,10 @@ when one comes back. In the message that arrives, look at the headers: `spf=pass
 - **Decide whether the site is to be found.** `curl -sI https://…/ | grep -i x-robots-tag` says
   which way the switch is set. There is no right answer here, only a decision that has been made —
   see *Not to be found yet*. Once it is on, submit `https://…/sitemap.xml` in the Search Console —
-  but only after the `noindex` meta has come out of the site's layout, or every address in it comes
-  back as *submitted URL marked noindex*.
+  after checking that the header is gone *and* the page's head no longer says `noindex`; the search
+  is not in the sitemap, so its noindex is no objection. A switch that will not come on is usually a
+  second `SITE_INDEXABLE` earlier in `.env` (the first one wins), the same name set by the server
+  (which beats `.env`), or OPcache still serving the old `bootstrap/cache/config.php` —
+  `php artisan config:show site` tells the three apart from the last.
 - **Create an API key** and hand it out; the one in `test.http` is local. Copy it off the screen while
   it is there — it is shown once and cannot be looked up afterwards, only replaced.

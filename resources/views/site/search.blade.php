@@ -1,5 +1,8 @@
 @extends('site.layout')
 
+{{-- Findable on the site, not through a search engine - whether or not the rest of it is. --}}
+@section('noindex', 'true')
+
 @section('content')
     <h1>{{ __('site.search.title') }}</h1>
     <p class="lede">{{ __('site.search.lede') }}</p>

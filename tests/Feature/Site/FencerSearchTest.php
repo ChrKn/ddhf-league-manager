@@ -205,8 +205,10 @@ class FencerSearchTest extends TestCase
 
     public function test_a_search_engine_is_asked_to_stay_away(): void
     {
-        // Every page says so for now. This one must keep saying it even once the standings are
-        // let into an index: a page that answers to a person's name has no business there.
+        // Even with the standings let into an index: a page that answers to a person's name has
+        // no business there.
+        config(['site.indexable' => true]);
+
         $this->get('/suche?q=Nachnahme')
             ->assertOk()
             ->assertSee('<meta name="robots" content="noindex,follow">', false);

@@ -28,7 +28,12 @@
     its indentation in the head. --}}
     <link rel="alternate" type="application/json" href="{{ $json }}">
 @endif
-    <meta name="robots" content="noindex,follow">{{-- On every page, next to the X-Robots-Tag header - two places to forget rather than one. --}}
+@if (!config('site.indexable') || View::hasSection('noindex')){{--
+    On every page while the site is not meant to be found, next to the X-Robots-Tag header. Once it
+    is, only on a page that asks for it with @section('noindex') - the person search, which answers
+    to a name and has no business in an index whatever the switch says. --}}
+    <meta name="robots" content="noindex,follow">
+@endif
     <link rel="icon" href="{{ \App\Support\VersionedAsset::url('img/ddhf-signet.svg') }}" type="image/svg+xml">
     <style>
         :root {
