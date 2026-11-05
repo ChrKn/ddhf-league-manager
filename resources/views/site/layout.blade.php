@@ -18,6 +18,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? __('site.brand_claim') }} · DDHF</title>
+@isset($description)
+    <meta name="description" content="{{ $description }}">
+@endisset
     <link rel="alternate" hreflang="de" href="{{ \App\Support\SiteUrl::alternate('de') }}">
     <link rel="alternate" hreflang="en" href="{{ \App\Support\SiteUrl::alternate('en') }}">
 @if (isset($json) && config('site.indexable')){{--

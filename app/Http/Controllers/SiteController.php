@@ -75,6 +75,7 @@ class SiteController extends Controller
 
         return view('site.index', [
             'title'  => __('site.index.title', ['year' => $year]),
+            'description' => __('site.index.description'),
             'year'   => $year,
             'tables' => $tables,
         ]);
@@ -109,6 +110,7 @@ class SiteController extends Controller
 
         return view('site.standings', [
             'title'   => __('site.standings.title'),
+            'description' => __('site.standings.description'),
             'json'    => route('data.standings'),
             'rows'    => $seasons->map(fn (Season $season) => [
                 'discipline'  => $season->standing?->discipline?->name,
@@ -205,6 +207,7 @@ class SiteController extends Controller
 
         return view('site.tournaments', [
             'title'   => __('site.tournaments.title'),
+            'description' => __('site.tournaments.description'),
             'json'    => route('data.tournaments'),
             'rows'    => $tournaments->map(fn (Tournament $tournament) => [
                 'name'        => $tournament->name ?: $tournament->display_name,

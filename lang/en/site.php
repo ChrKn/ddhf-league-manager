@@ -37,6 +37,7 @@ return [
     'index' => [
         'title'      => 'Standings :year',
         'lede'       => 'The first ten of every standing of the current season.',
+        'description' => 'The current standings of the German Federation for Historical Fencing (DDHF): the first ten of every weapon and division.',
         'all'        => 'All standings and earlier years',
         'full'       => 'Full standing',
         'fencers'    => ':count fencers',
@@ -47,6 +48,7 @@ return [
     'standings' => [
         'title' => 'Standings',
         'lede'  => 'Every weapon and division, for every year it was fenced in.',
+        'description' => 'Every DDHF standing in historical fencing, by weapon, division and year.',
         'table' => 'Table →',
         'empty' => 'No standing matches this selection.',
         'count' => 'standings',
@@ -78,6 +80,7 @@ return [
     'tournaments' => [
         'title' => 'Tournaments',
         'lede'  => 'Every tournament whose results count towards a DDHF standing.',
+        'description' => 'Every historical fencing tournament whose results count towards a DDHF standing.',
         'empty' => 'No tournament matches this selection.',
         'count' => 'tournaments',
     ],

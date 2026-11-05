@@ -34,6 +34,7 @@ return [
     'index' => [
         'title'      => 'Ranglisten :year',
         'lede'       => 'Die ersten zehn jeder Rangliste der laufenden Saison.',
+        'description' => 'Die aktuellen Ranglisten des Deutschen Dachverbands für historisches Fechten (DDHF): die ersten zehn jeder Waffe und Abteilung.',
         'all'        => 'Alle Ranglisten und früheren Jahre',
         'full'       => 'Vollständige Rangliste',
         'fencers'    => ':count Fechter',
@@ -44,6 +45,7 @@ return [
     'standings' => [
         'title' => 'Ranglisten',
         'lede'  => 'Jede Waffe und Abteilung, für jedes Jahr, in dem sie gefochten wurde.',
+        'description' => 'Alle Ranglisten des DDHF im historischen Fechten, nach Waffe, Abteilung und Jahr.',
         'table' => 'Tabelle →',
         'empty' => 'Keine Rangliste passt zu dieser Auswahl.',
         'count' => 'Ranglisten',
@@ -75,6 +77,7 @@ return [
     'tournaments' => [
         'title' => 'Turniere',
         'lede'  => 'Alle Turniere, deren Ergebnisse in eine Rangliste des DDHF eingehen.',
+        'description' => 'Alle Turniere im historischen Fechten, deren Ergebnisse in eine Rangliste des DDHF eingehen.',
         'empty' => 'Kein Turnier passt zu dieser Auswahl.',
         'count' => 'Turniere',
     ],

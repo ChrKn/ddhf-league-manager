@@ -136,6 +136,26 @@ class LocalisationTest extends TestCase
         }
     }
 
+    public function test_the_overview_pages_describe_themselves_in_their_own_language(): void
+    {
+        $pages = [
+            '/'           => ['de', 'index'],
+            '/en'         => ['en', 'index'],
+            '/ranglisten' => ['de', 'standings'],
+            '/en/standings' => ['en', 'standings'],
+            '/turniere'   => ['de', 'tournaments'],
+            '/en/tournaments' => ['en', 'tournaments'],
+        ];
+
+        foreach ($pages as $path => [$locale, $key]) {
+            $this->get($path)
+                ->assertOk()
+                ->assertSee('<meta name="description" content="' . e(__("site.{$key}.description", [], $locale)) . '">', false);
+        }
+
+        $this->assertNotSame(__('site.index.description', [], 'de'), __('site.index.description', [], 'en'));
+    }
+
     public function test_only_the_search_keeps_asking_once_the_switch_is_on(): void
     {
         config(['site.indexable' => true]);
