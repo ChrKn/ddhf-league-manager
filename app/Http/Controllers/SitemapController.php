@@ -47,8 +47,9 @@ class SitemapController extends Controller
             'en' => SiteUrl::in($page[0], 'en', $page[1]),
         ], $pages);
 
-        return response()
-            ->view('site.sitemap', ['entries' => $entries])
+        // The declaration here rather than in the view: see the note at the top of sitemap.blade.php.
+        // ltrim because nothing may stand before it, not even a line break.
+        return response('<?xml version="1.0" encoding="UTF-8"?>' . "\n" . ltrim(view('site.sitemap', ['entries' => $entries])->render()))
             ->header('Content-Type', 'application/xml; charset=utf-8');
     }
 

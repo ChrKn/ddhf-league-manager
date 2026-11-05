@@ -53,6 +53,22 @@ class SitemapTest extends TestCase
         $this->get('/sitemap.xml')->assertNotFound();
     }
 
+    public function test_it_starts_with_the_declaration_and_no_view_carries_one(): void
+    {
+        config(['site.indexable' => true]);
+
+        $this->assertStringStartsWith('<?xml version="1.0" encoding="UTF-8"?>' . "\n<urlset", $this->get('/sitemap.xml')->getContent());
+
+        // short_open_tag cannot be switched on from a test, so this is checked at the source: on a
+        // server that has it on, a "<?" anywhere in a view - echoed string or not - is a parse error.
+        $views = \Illuminate\Support\Facades\File::allFiles(resource_path('views'));
+        $this->assertNotEmpty($views);
+
+        foreach ($views as $view) {
+            $this->assertStringNotContainsString('<?xml', $view->getContents(), $view->getPathname());
+        }
+    }
+
     public function test_it_lists_every_page_in_both_languages(): void
     {
         config(['site.indexable' => true]);

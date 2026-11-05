@@ -1,7 +1,7 @@
-{!! '<?xml version="1.0" encoding="UTF-8"?>' !!}
 {{--
-    The declaration comes first because nothing may stand before it, not even a line break, and is
-    echoed because Blade would read a literal "<?" as the start of PHP.
+    No XML declaration here - SitemapController puts it in front. Any "<?" in this file, even inside
+    an echoed string, is the start of PHP to a server with short_open_tag on, and Blade only compiles
+    what PHP's lexer calls HTML: the line is left as it stands and the page dies of a parse error.
 
     One <url> per address, and in each the other language as well as its own - which is what
     hreflang in a sitemap asks for, and the same pair the layout names in every page's head.
