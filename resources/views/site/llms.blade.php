@@ -15,6 +15,7 @@ Everything below is also available as JSON, one document per page, carrying exac
 
 - [Standings]({{ route('site.standings') }}) ([English]({{ route('site.en.standings') }}))
 - [Tournaments]({{ route('site.tournaments') }}) ([English]({{ route('site.en.tournaments') }}))
+- [Announcements]({{ route('site.news') }}) ([English]({{ route('site.en.news') }})): what the federation announced in the last twelve months, such as corrected results. Not available as JSON.
 
 ## How a standing is scored
 

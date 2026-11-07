@@ -87,6 +87,8 @@ class SitemapTest extends TestCase
             'http://localhost/en/standings',
             'http://localhost/turniere',
             'http://localhost/en/tournaments',
+            'http://localhost/meldungen',
+            'http://localhost/en/news',
             "http://localhost/ranglisten/{$this->season->public_id}",
             "http://localhost/en/standings/{$this->season->public_id}",
             "http://localhost/turniere/{$this->tournament->public_id}",

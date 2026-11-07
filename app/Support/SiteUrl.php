@@ -31,8 +31,8 @@ final class SiteUrl
      * been published under them yet.
      */
     public const SLUGS = [
-        'de' => ['standings' => 'ranglisten', 'tournaments' => 'turniere', 'search' => 'suche'],
-        'en' => ['standings' => 'standings',  'tournaments' => 'tournaments', 'search' => 'search'],
+        'de' => ['standings' => 'ranglisten', 'tournaments' => 'turniere', 'search' => 'suche', 'news' => 'meldungen'],
+        'en' => ['standings' => 'standings',  'tournaments' => 'tournaments', 'search' => 'search', 'news' => 'news'],
     ];
 
     public static function to(string $name, mixed $parameters = []): string

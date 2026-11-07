@@ -24,10 +24,12 @@ return [
         'index'       => 'Overview',
         'standings'   => 'Standings',
         'tournaments' => 'Tournaments',
+        'news'        => 'News',
         'search'      => 'Search',
     ],
 
     'date_format' => 'j M Y',
+    'datetime_format' => 'j M Y, H:i',
 
     'language' => [
         'switch_to' => 'Deutsch',
@@ -43,6 +45,16 @@ return [
         'fencers'    => ':count fencers',
         'empty'      => 'No scored results have been recorded for :year yet.',
         'empty_link' => 'The standings of earlier years',
+        'news'       => 'Latest news',
+    ],
+
+    'news' => [
+        'title'       => 'News',
+        'lede'        => '',
+        'description' => 'Notices from the DDHF about its standings in historical fencing, such as corrected results.',
+        'empty'       => 'There were no notices in the last twelve months.',
+        'revised'     => 'updated :date',
+        'all'         => 'All news',
     ],
 
     'standings' => [

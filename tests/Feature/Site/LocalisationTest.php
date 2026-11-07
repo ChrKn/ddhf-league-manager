@@ -97,6 +97,7 @@ class LocalisationTest extends TestCase
             '/'                => '/en',
             '/ranglisten'      => '/en/standings',
             '/turniere'        => '/en/tournaments',
+            '/meldungen'       => '/en/news',
             '/ranglisten/' . $this->season->public_id        => '/en/standings/' . $this->season->public_id,
             '/turniere/' . $this->tournament->public_id => '/en/tournaments/' . $this->tournament->public_id,
         ];

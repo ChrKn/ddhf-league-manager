@@ -32,7 +32,7 @@ class SitemapController extends Controller
     {
         abort_unless(config('site.indexable'), 404);
 
-        $pages = [['index', []], ['standings', []], ['tournaments', []]];
+        $pages = [['index', []], ['standings', []], ['tournaments', []], ['news', []]];
 
         foreach (Season::public()->orderBy('id')->pluck('public_id') as $publicId) {
             $pages[] = ['standing', $publicId];

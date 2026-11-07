@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Announcement;
 use App\Models\Discipline;
 use App\Models\Division;
 use App\Models\Season;
@@ -34,6 +35,9 @@ class SiteController extends Controller
 {
     /** How many rows the front page shows per standing. A hard cut, ties included. */
     private const FRONT_PAGE_ROWS = 10;
+
+    /** How many announcements the front page shows above the tables. */
+    private const FRONT_PAGE_ANNOUNCEMENTS = 3;
 
     /**
      * Every standing of the current year, cut to the first ten.
@@ -78,6 +82,20 @@ class SiteController extends Controller
             'description' => __('site.index.description'),
             'year'   => $year,
             'tables' => $tables,
+            'announcements' => $this->announcements(self::FRONT_PAGE_ANNOUNCEMENTS),
+        ]);
+    }
+
+    /**
+     * What the federation has announced in the last twelve months, newest first. A list only:
+     * there is no page per announcement, and nothing of it in the API or under /data.
+     */
+    public function news()
+    {
+        return view('site.news', [
+            'title'         => __('site.news.title'),
+            'description'   => __('site.news.description'),
+            'announcements' => $this->announcements(),
         ]);
     }
 
@@ -300,6 +318,32 @@ class SiteController extends Controller
             'trimmed' => $found['trimmed'],
             'tooShort' => $query !== '' && mb_strlen(trim($query)) < FencerSearch::MINIMUM,
         ]);
+    }
+
+    /**
+     * Announcements as the views print them. The author is left out on purpose - it is for the
+     * panel, and it is not handed to a view that could print it by mistake.
+     */
+    private function announcements(?int $limit = null): array
+    {
+        $locale = App::getLocale();
+        $format = __('site.datetime_format');
+        // Stored in UTC, shown on the reader's clock - see config/site.php.
+        $zone = config('site.timezone');
+
+        return Announcement::recent()
+            ->when($limit, fn ($query, $limit) => $query->limit($limit))
+            ->get()
+            ->map(fn (Announcement $announcement) => [
+                'title'        => $announcement->titleFor($locale),
+                'html'         => $announcement->bodyHtmlFor($locale),
+                'lang'         => $announcement->languageFor($locale),
+                'date'         => $announcement->created_at->copy()->setTimezone($zone)->format($format),
+                'datetime'     => $announcement->created_at->copy()->setTimezone($zone)->toAtomString(),
+                'revised'      => $announcement->revised_at?->copy()->setTimezone($zone)->format($format),
+                'revised_time' => $announcement->revised_at?->copy()->setTimezone($zone)->toAtomString(),
+            ])
+            ->all();
     }
 
     private function dateOf(Tournament $tournament): ?string

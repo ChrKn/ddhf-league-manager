@@ -7,6 +7,19 @@
         <a href="{{ $url('standings') }}">{{ __('site.index.all') }}</a>
     </p>
 
+    @if ($announcements !== [])
+        {{-- A notice above the tables rather than another panel among them: it is something to
+             read, not something to look up, and should not pass for a fifth standing. --}}
+        <aside class="news-teaser" aria-labelledby="news-teaser-heading">
+            <div class="news-teaser-head">
+                <h2 id="news-teaser-heading">{{ __('site.index.news') }}</h2>
+                <a href="{{ $url('news') }}">{{ __('site.news.all') }} →</a>
+            </div>
+
+            @include('site.partials.announcements', ['announcements' => $announcements])
+        </aside>
+    @endif
+
     @forelse ($tables as $table)
         <section class="panel">
             <div class="panel-head">

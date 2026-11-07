@@ -20,11 +20,14 @@ return [
         'index'       => 'Übersicht',
         'standings'   => 'Ranglisten',
         'tournaments' => 'Turniere',
+        'news'        => 'Meldungen',
         'search'      => 'Suche',
     ],
 
     // Only the format, not a sentence: "9. Mai 2026" against "9 May 2026".
     'date_format' => 'd.m.Y',
+    // With the time of day, for announcements: "07.11.2026, 15:12".
+    'datetime_format' => 'd.m.Y, H:i',
 
     'language' => [
         'switch_to' => 'English',
@@ -40,6 +43,16 @@ return [
         'fencers'    => ':count Fechter',
         'empty'      => 'Für :year sind noch keine gewerteten Ergebnisse eingetragen.',
         'empty_link' => 'Die Ranglisten der Vorjahre',
+        'news'       => 'Aktuelle Meldungen',
+    ],
+
+    'news' => [
+        'title'       => 'Meldungen',
+        'lede'        => '',
+        'description' => 'Meldungen des DDHF zu den Ranglisten im historischen Fechten, etwa Ergebniskorrekturen.',
+        'empty'       => 'In den letzten zwölf Monaten gab es keine Meldungen.',
+        'revised'     => 'aktualisiert am :date',
+        'all'         => 'Alle Meldungen',
     ],
 
     'standings' => [

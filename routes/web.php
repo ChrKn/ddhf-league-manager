@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 /*
- * The site the federation's readers see. Standings and the tournaments they are made of, and
- * nothing else - no federations, clubs, fencers, events or seasons in their own right, and no
+ * The site the federation's readers see. Standings, the tournaments they are made of and
+ * the federation's announcements, and nothing else - no federations, clubs, fencers, events or seasons in their own right, and no
  * link into the admin panel.
  *
  * One definition, registered once per language: German at the root with German paths, English
@@ -33,6 +33,7 @@ $site = function (string $locale) {
     Route::get("/{$slug['tournaments']}", [SiteController::class, 'tournaments'])->name('tournaments');
     Route::get("/{$slug['tournaments']}/{public_id}", [SiteController::class, 'tournament'])->name('tournament');
     Route::get("/{$slug['search']}", [SiteController::class, 'search'])->name('search');
+    Route::get("/{$slug['news']}", [SiteController::class, 'news'])->name('news');
 };
 
 /*

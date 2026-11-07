@@ -47,6 +47,7 @@
             --line: #dedcd6;
             --accent: #cc1d1b;       /* 5.59 on white */
             --accent-soft: #fdf0ef;
+            --tint: #edebe7;         /* a grey for asides; --muted is 5.38 on it, --accent 4.69 */
             --up: #1a7f37;           /* 5.08 on white, 4.57 on --accent-soft */
             --down: #b42318;         /* 6.57 on white, 5.91 on --accent-soft */
             --gold: #ffdd00;         /* only ever on --dark */
@@ -65,6 +66,7 @@
                 --line: #333330;
                 --accent: #e8524f;   /* 5.05 on #141414; the theme red is 3.30 and fails */
                 --accent-soft: #2a1a1a;
+                --tint: #1c1c1b;     /* --muted 6.67 on it, --accent 4.67 */
                 --up: #4cc06f;       /* 7.21 on --panel */
                 --down: #f07070;     /* 5.76 on --panel */
                 --shadow: none;
@@ -149,7 +151,8 @@
         }
 
         .panel + .panel,
-        .panel + form.controls { margin-top: 1.4rem; }
+        .panel + form.controls,
+        .panel + .note { margin-top: 1.4rem; }
 
         .panel-head {
             display: flex;
@@ -235,6 +238,66 @@
 
         tbody tr a { text-decoration: none; }
         tbody tr a:hover { text-decoration: underline; }
+
+        /* --- announcements ------------------------------------------------- */
+
+        /* A list of headings that open in place - there is no page per announcement. */
+        .news { list-style: none; margin: 0; padding: 0; }
+        .news > li + li { border-top: 1px solid var(--line); }
+
+        .news summary {
+            cursor: pointer;
+            padding: .8rem 1.1rem;
+        }
+        .news summary:hover { background: var(--accent-soft); }
+        .news summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+        .news summary::marker { color: var(--accent); }
+
+        .news .when { font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; margin-right: .6rem; }
+        .news .headline { font-weight: 650; }
+
+        .news .body { padding: 0 1.1rem 1rem 2.2rem; font-size: .95rem; }
+        .news .body > :first-child { margin-top: 0; }
+        .news .body > :last-child { margin-bottom: 0; }
+
+        /* The front page's newest few, set as a grey aside rather than a panel so it does not read
+           as one more table - and without red, which here would look like an alarm. Only the links
+           in a text keep the accent, as links do everywhere. */
+        .news-teaser {
+            background: var(--tint);
+            border-radius: 8px;
+            margin: 0 0 2rem;
+            padding: .7rem 0 .4rem;
+        }
+
+        .news-teaser-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: .3rem 1rem;
+            padding: 0 1rem .3rem;
+        }
+
+        .news-teaser-head h2 {
+            font-size: .74rem;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            color: var(--muted);
+        }
+
+        .news-teaser-head a { font-size: .84rem; color: var(--ink); }
+        .news-teaser-head a:hover { color: var(--muted); }
+        .news-teaser-head a:focus-visible { outline-color: var(--ink); }
+
+        .news-teaser .news > li + li { border-top-color: var(--line); }
+        .news-teaser .news summary { padding: .45rem 1rem; }
+        .news-teaser .news summary::marker { color: var(--muted); }
+        .news-teaser .news summary:hover { background: transparent; }
+        .news-teaser .news summary:hover .headline { text-decoration: underline; }
+        .news-teaser .news summary:focus-visible { outline-color: var(--ink); }
+        .news-teaser .news .headline { font-weight: 600; }
+        .news-teaser .news .body { padding: .1rem 1rem .7rem 2.1rem; font-size: .92rem; }
 
         /* --- filters ------------------------------------------------------- */
 
@@ -389,7 +452,7 @@
             // in German and site.en.standings in English, and both answer to "standings".
             $current = \App\Support\SiteUrl::currentShortName();
         @endphp
-        @foreach (['index', 'standings', 'tournaments', 'search'] as $name)
+        @foreach (['index', 'standings', 'tournaments', 'news', 'search'] as $name)
             <a href="{{ $url($name) }}"
                @if ($current === $name) aria-current="page" @endif>{{ __('site.nav.' . $name) }}</a>
         @endforeach
