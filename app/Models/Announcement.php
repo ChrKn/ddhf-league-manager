@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
+use League\CommonMark\Extension\ExternalLink\ExternalLinkExtension;
 
 /**
  * Something the federation wants readers to know, most often that a result was corrected.
@@ -84,6 +85,11 @@ class Announcement extends Model
     /**
      * The text as HTML. Safe to print unescaped: raw HTML in the Markdown is escaped and links
      * to javascript: and the like are dropped.
+     *
+     * A link that leaves this site opens in a new tab, with rel="noopener noreferrer". Only this
+     * site's own host counts as inside - ddhf.de is a different site, and a reader in the middle
+     * of a standing should not lose it for the federation's front page. The view marks those
+     * links, so the new tab is announced rather than sprung on anybody.
      */
     public function bodyHtmlFor(string $locale): string
     {
@@ -92,6 +98,12 @@ class Announcement extends Model
         return Str::markdown($markdown, [
             'html_input'         => 'escape',
             'allow_unsafe_links' => false,
-        ]);
+            'external_link'      => [
+                'internal_hosts'     => array_filter([parse_url((string) config('app.url'), PHP_URL_HOST)]),
+                'open_in_new_window' => true,
+                'noopener'           => 'external',
+                'noreferrer'         => 'external',
+            ],
+        ], [new ExternalLinkExtension()]);
     }
 }

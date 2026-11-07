@@ -73,6 +73,9 @@
             }
         }
 
+        /* Here rather than in the rule that uses it, so the words come from the language file. */
+        :root { --new-tab: " {{ __('site.news.new_tab') }}"; }
+
         * { box-sizing: border-box; }
 
         body {
@@ -321,6 +324,15 @@
         .news .body { padding: 0 1.1rem 1rem 2.2rem; font-size: .95rem; }
         .news .body > :first-child { margin-top: 0; }
         .news .body > :last-child { margin-bottom: 0; }
+
+        /* A link that opens a new tab says so: an arrow to see, and words for a screen reader in
+           place of the arrow. Browsers without alternative text for generated content keep the
+           first declaration and show the arrow alone. */
+        .news .body a[target="_blank"]::after {
+            content: "\00a0↗";
+            content: "\00a0↗" / var(--new-tab);
+            font-size: .85em;
+        }
 
         /* The front page's newest few, set as a grey aside rather than a panel so it does not read
            as one more table - and without red, which here would look like an alarm. Only the links

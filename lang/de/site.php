@@ -54,6 +54,7 @@ return [
         'empty'       => 'In den letzten zwölf Monaten gab es keine Meldungen.',
         'revised'     => 'aktualisiert am :date',
         'all'         => 'Alle Meldungen',
+        'new_tab'     => '(öffnet in neuem Tab)',
     ],
 
     'standings' => [

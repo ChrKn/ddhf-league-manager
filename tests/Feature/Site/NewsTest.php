@@ -106,6 +106,20 @@ class NewsTest extends TestCase
         $this->get('/en/news')->assertSee('1 Jul ' . now()->year . ', 15:05');
     }
 
+    public function test_only_links_to_this_site_stay_in_the_same_tab(): void
+    {
+        $this->announce('Verlinkt', now()->toDateTimeString(), [
+            'body' => '[hier](http://localhost/ranglisten), [relativ](/turniere) und [Verband](https://ddhf.de/)',
+        ]);
+
+        $html = $this->get('/meldungen')->assertOk()->getContent();
+
+        $this->assertStringContainsString('<a href="http://localhost/ranglisten">hier</a>', $html);
+        $this->assertStringContainsString('<a href="/turniere">relativ</a>', $html);
+        $this->assertMatchesRegularExpression('/<a [^>]*target="_blank"[^>]*href="https:\/\/ddhf\.de\/">Verband<\/a>/', $html);
+        $this->assertStringContainsString('--new-tab: " (öffnet in neuem Tab)"', $html);
+    }
+
     public function test_markdown_is_rendered_and_html_is_not(): void
     {
         $this->announce('Formatiert', now()->toDateTimeString(), [
@@ -115,7 +129,7 @@ class NewsTest extends TestCase
         $html = $this->get('/meldungen')->assertOk()->getContent();
 
         $this->assertStringContainsString('<strong>fett</strong>', $html);
-        $this->assertStringContainsString('<a href="https://ddhf.de/">Link</a>', $html);
+        $this->assertStringContainsString('<a rel="noopener noreferrer" target="_blank" href="https://ddhf.de/">Link</a>', $html);
         $this->assertStringNotContainsString('<script>alert(1)</script>', $html);
         $this->assertStringContainsString('&lt;script&gt;', $html);
         $this->assertStringNotContainsString('javascript:', $html);

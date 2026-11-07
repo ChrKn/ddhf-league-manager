@@ -56,6 +56,7 @@ return [
         'empty'       => 'There were no notices in the last twelve months.',
         'revised'     => 'updated :date',
         'all'         => 'All news',
+        'new_tab'     => '(opens in a new tab)',
     ],
 
     'standings' => [
