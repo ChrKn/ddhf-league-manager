@@ -25,9 +25,7 @@ return [
         'search'      => 'Suche',
     ],
 
-    // Only the format, not a sentence: "9. Mai 2026" against "9 May 2026".
-    'date_format' => 'd.m.Y',
-    // With the time of day, for announcements: "07.11.2026, 15:12".
+    'date_format'     => 'd.m.Y',
     'datetime_format' => 'd.m.Y, H:i',
 
     'language' => [
@@ -36,15 +34,15 @@ return [
     ],
 
     'index' => [
-        'title'      => 'Ranglisten :year',
-        'lede'       => 'Die ersten zehn jeder Rangliste der laufenden Saison.',
+        'title'       => 'Ranglisten :year',
+        'lede'        => 'Die ersten zehn jeder Rangliste der laufenden Saison.',
         'description' => 'Die aktuellen Ranglisten des Deutschen Dachverbands für historisches Fechten (DDHF): die ersten zehn jeder Waffe und Abteilung.',
-        'all'        => 'Alle Ranglisten und früheren Jahre',
-        'full'       => 'Vollständige Rangliste',
-        'fencers'    => ':count Fechter',
-        'empty'      => 'Für :year sind noch keine gewerteten Ergebnisse eingetragen.',
-        'empty_link' => 'Die Ranglisten der Vorjahre',
-        'news'       => 'Aktuelle Meldungen',
+        'all'         => 'Alle Ranglisten und früheren Jahre',
+        'full'        => 'Vollständige Rangliste',
+        'fencers'     => ':count Fechter',
+        'empty'       => 'Für :year sind noch keine gewerteten Ergebnisse eingetragen.',
+        'empty_link'  => 'Die Ranglisten der Vorjahre',
+        'news'        => 'Aktuelle Meldungen',
     ],
 
     'news' => [
@@ -58,43 +56,41 @@ return [
     ],
 
     'standings' => [
-        'title' => 'Ranglisten',
-        'lede'  => 'Jede Waffe und Abteilung, für jedes Jahr, in dem sie gefochten wurde.',
+        'title'       => 'Ranglisten',
+        'lede'        => 'Jede Waffe und Abteilung, für jedes Jahr, in dem sie gefochten wurde.',
         'description' => 'Alle Ranglisten des DDHF im historischen Fechten, nach Waffe, Abteilung und Jahr.',
-        'table' => 'Tabelle →',
-        'empty' => 'Keine Rangliste passt zu dieser Auswahl.',
-        'count' => 'Ranglisten',
+        'table'       => 'Tabelle →',
+        'empty'       => 'Keine Rangliste passt zu dieser Auswahl.',
+        'count'       => 'Ranglisten',
     ],
 
     'standing' => [
-        'season'      => 'Saison',
-        'scoring'     => 'Auswertung',
-        'all'         => 'alle Ranglisten',
-        'show'        => ':count anzeigen',
-        'anonymised'  => 'anonymisiert',
-        'not_counted' => 'zählt nicht',
-        // Shown only where not every result counts, so that the standard system says nothing
-        // about a selection it never makes.
+        'season'           => 'Saison',
+        'scoring'          => 'Auswertung',
+        'all'              => 'alle Ranglisten',
+        'show'             => ':count anzeigen',
+        'anonymised'       => 'anonymisiert',
+        'not_counted'      => 'zählt nicht',
         'of_which_counted' => '· :count gewertet',
-        'empty'       => 'In dieser Saison ist noch kein Ergebnis gewertet.',
-        'empty_club'  => 'Aus diesem Verein ist hier niemand gewertet.',
-        'count'       => 'Fechter',
-        'of_total'    => 'von :total in dieser Rangliste',
-        'as_of'       => 'Stand nach :label',
-        'to_current'  => 'zum aktuellen Stand',
-        'up'          => '{1} einen Platz verbessert|[2,*] :count Plätze verbessert',
-        'down'        => '{1} einen Platz verloren|[2,*] :count Plätze verloren',
-        'same'        => 'unverändert',
-        'new'         => 'neu',
-        'new_long'    => 'neu in der Rangliste',
+        'empty'            => 'In dieser Saison ist noch kein Ergebnis gewertet.',
+        'empty_club'       => 'Aus dieser Gruppe ist hier niemand gewertet.',
+        'count'            => 'Fechter',
+        'of_total'         => 'von :total in dieser Rangliste',
+        'as_of'            => 'Stand nach :label',
+        'to_current'       => 'zum aktuellen Stand',
+        'up'               => '{1} einen Platz verbessert|[2,*] :count Plätze verbessert',
+        'down'             => '{1} einen Platz verloren|[2,*] :count Plätze verloren',
+        'same'             => 'unverändert',
+        'new'              => 'neu',
+        'new_long'         => 'neu in der Rangliste',
     ],
 
     'tournaments' => [
-        'title' => 'Turniere',
-        'lede'  => 'Alle Turniere, deren Ergebnisse in eine Rangliste des DDHF eingehen.',
+        'title'       => 'Turniere',
+        'lede'        => 'Alle Turniere, deren Ergebnisse in eine Rangliste des DDHF eingehen.',
         'description' => 'Alle Turniere im historischen Fechten, deren Ergebnisse in eine Rangliste des DDHF eingehen.',
-        'empty' => 'Kein Turnier passt zu dieser Auswahl.',
-        'count' => 'Turniere',
+        'empty'       => 'Kein Turnier passt zu dieser Auswahl.',
+        'count'       => 'Turniere',
     ],
 
     'tournament' => [
@@ -102,7 +98,7 @@ return [
         'standing'   => 'Rangliste dieser Saison',
         'results'    => 'Ergebnisse',
         'empty'      => 'Zu diesem Turnier ist kein Ergebnis erfasst.',
-        'empty_club' => 'Aus diesem Verein ist hier niemand angetreten.',
+        'empty_club' => 'Aus dieser Gruppe ist hier niemand angetreten.',
         'count'      => 'Ergebnisse',
         'of_total'   => 'von :total',
         'note'       => 'Punkte gelten nur für Mitglieder des DDHF; die Rangliste zeigt, wer davon gewertet wird.',
@@ -113,7 +109,7 @@ return [
         'change'       => 'Veränderung',
         'standing'     => 'Rangliste',
         'fencer'       => 'Fechter',
-        'club'         => 'Verein',
+        'club'         => 'Gruppe',
         'points'       => 'Punkte',
         'qualifier'    => 'Gewertet über',
         'results'      => 'Einzelergebnisse',
@@ -130,13 +126,12 @@ return [
     ],
 
     'filters' => [
-        'all'    => 'alle',
-        'search' => 'Suche',
-        'hint'   => 'Name eingeben',
-        'submit' => 'Anzeigen',
-        'reset'  => 'Zurücksetzen',
-        'club'   => 'Verein',
-        // The table after each event, like the table after each matchday.
+        'all'          => 'alle',
+        'search'       => 'Suche',
+        'hint'         => 'Name eingeben',
+        'submit'       => 'Anzeigen',
+        'reset'        => 'Zurücksetzen',
+        'club'         => 'Gruppe',
         'step'         => 'Stand nach',
         'step_current' => 'aktuell: :label',
     ],
@@ -157,10 +152,8 @@ return [
         'submit'      => 'Suchen',
         'to_standing' => 'zur Rangliste →',
         'of'          => 'von :total',
-        'no_club'     => 'Kein Verein',
+        'no_club'     => 'Keine Gruppe',
         'too_short'   => 'Bitte mindestens :count Zeichen eingeben.',
-        // Gesucht wird in den Ranglisten, nicht in den Rohdaten: wer für einen Verein gefochten
-        // hat, der kein Mitglied ist, steht in keiner Tabelle und deshalb auch hier nicht.
         'nothing'     => 'Zu „:query“ steht niemand in den Ranglisten.',
         'trimmed'     => 'Mehr als :count Treffer — bitte den Namen genauer eingeben.',
         'count'       => '{1} eine Person|[2,*] :count Personen',
