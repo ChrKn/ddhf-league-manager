@@ -18,6 +18,7 @@
 
 return [
     'brand_claim' => 'Standings',
+    'menu'        => 'Menu',
     'main_menu'   => 'Main menu',
 
     'nav' => [

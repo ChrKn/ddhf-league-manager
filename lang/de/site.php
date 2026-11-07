@@ -14,6 +14,7 @@
 
 return [
     'brand_claim' => 'Ranglisten',
+    'menu'        => 'Menü',
     'main_menu'   => 'Hauptmenü',
 
     'nav' => [

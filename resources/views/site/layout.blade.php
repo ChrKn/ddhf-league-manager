@@ -107,7 +107,9 @@
 
         nav.main { background: var(--dark); }
 
-        nav.main .wrap { display: flex; flex-wrap: wrap; gap: .1rem; padding-inline: 1.05rem; }
+        nav.main .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: .1rem; padding-inline: 1.05rem; }
+
+        nav.main .pages { display: flex; flex-wrap: wrap; gap: .1rem; }
 
         nav.main a {
             color: var(--on-dark-muted);
@@ -130,6 +132,66 @@
         /* Pushed to the far end, so it reads as a setting rather than a fourth page. */
         nav.main a.lang { margin-left: auto; font-size: .84rem; letter-spacing: .02em; }
         nav.main a.lang::before { content: "◍ "; opacity: .6; }
+
+        /* The burger. Only ever shown by the script below and only on a narrow screen - without a
+           script the menu stays the row of links it always was, wrapping where it has to. */
+        nav.main .burger { display: none; }
+
+        @media (max-width: 47.99rem) {
+            /* Language on the left, the burger on the right, the pages folded away underneath. */
+            nav.main.has-burger a.lang { order: 1; margin-left: 0; }
+
+            nav.main.has-burger .burger {
+                order: 2;
+                margin-left: auto;
+                display: inline-flex;
+                flex-direction: column;
+                justify-content: center;
+                gap: 5px;
+                width: 2.75rem;
+                height: 2.75rem;
+                padding: 0 .6rem;
+                background: none;
+                border: 0;
+                cursor: pointer;
+            }
+
+            nav.main.has-burger .burger span {
+                display: block;
+                height: 2px;
+                background: var(--on-dark);
+                border-radius: 1px;
+                transition: transform .15s ease, opacity .15s ease;
+            }
+
+            nav.main.has-burger .burger:hover span { background: var(--gold); }
+            nav.main.has-burger .burger:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+
+            /* Open, the three bars turn into a cross. */
+            nav.main.is-open .burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+            nav.main.is-open .burger span:nth-child(2) { opacity: 0; }
+            nav.main.is-open .burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+            nav.main.has-burger .pages {
+                order: 3;
+                flex-basis: 100%;
+                flex-direction: column;
+                gap: 0;
+                display: none;
+                border-top: 1px solid #333330;
+                padding-bottom: .4rem;
+            }
+
+            nav.main.is-open .pages { display: flex; }
+
+            /* Stacked, the marker for the current page moves from underneath to the left edge. */
+            nav.main.has-burger .pages a { border-bottom: 0; border-left: 3px solid transparent; padding: .65rem .8rem; }
+            nav.main.has-burger .pages a[aria-current="page"] { border-left-color: var(--gold); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            nav.main .burger span { transition: none; }
+        }
 
         /* --- content ------------------------------------------------------- */
 
@@ -452,10 +514,18 @@
             // in German and site.en.standings in English, and both answer to "standings".
             $current = \App\Support\SiteUrl::currentShortName();
         @endphp
-        @foreach (['index', 'standings', 'tournaments', 'news', 'search'] as $name)
-            <a href="{{ $url($name) }}"
-               @if ($current === $name) aria-current="page" @endif>{{ __('site.nav.' . $name) }}</a>
-        @endforeach
+        {{-- Hidden until the script takes over the menu; see the burger in the style block. --}}
+        <button class="burger" type="button" aria-controls="main-pages" aria-expanded="false"
+                aria-label="{{ __('site.menu') }}" hidden>
+            <span></span><span></span><span></span>
+        </button>
+
+        <div class="pages" id="main-pages">
+            @foreach (['index', 'standings', 'tournaments', 'news', 'search'] as $name)
+                <a href="{{ $url($name) }}"
+                   @if ($current === $name) aria-current="page" @endif>{{ __('site.nav.' . $name) }}</a>
+            @endforeach
+        </div>
 
         {{-- The same page in the other language, not that language's front page. --}}
         <a class="lang"
@@ -521,6 +591,33 @@
     GET form on their own, and the tables are readable unsorted.
 --}}
 <script>
+    // --- menu: a burger on narrow screens ----------------------------------------------------
+    // The class is what folds the pages away, so without this script nothing is ever hidden.
+    (function () {
+        var nav = document.querySelector('nav.main');
+        var button = nav && nav.querySelector('.burger');
+        if (!button) return;
+
+        button.hidden = false;
+        nav.classList.add('has-burger');
+
+        function setOpen(open) {
+            nav.classList.toggle('is-open', open);
+            button.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+
+        button.addEventListener('click', function () {
+            setOpen(!nav.classList.contains('is-open'));
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && nav.classList.contains('is-open')) {
+                setOpen(false);
+                button.focus();
+            }
+        });
+    })();
+
     // --- filters: submit on change, so the button is only needed without a script -----------
     document.querySelectorAll('form.controls').forEach(function (form) {
         form.querySelectorAll('select').forEach(function (select) {
