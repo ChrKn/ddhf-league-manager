@@ -26,7 +26,7 @@
     <div class="warning">
         Gelistet wird, wer das Ergebnis für einen Verein des {{ \App\Models\Federation::OWN }}
         gefochten hat — Mitgliedschaft wird am Ergebnis abgelesen, nicht an der Person.
-        Anonymisierte Fechter stehen an ihrem Platz, aber ohne Namen, ohne Verein und ohne
+        Anonymisierte Fechtende stehen an ihrem Platz, aber ohne Namen, ohne Verein und ohne
         Einzelergebnisse — nur die Punktzahl bleibt. Wer hier fehlt, obwohl er gefochten hat,
         hatte an dem Tag keinen Verband am Ergebnis.
     </div>
@@ -38,7 +38,7 @@
             <thead>
             <tr>
                 <th scope="col">Platz</th>
-                <th scope="col">Fechter</th>
+                <th scope="col">Fechter:in</th>
                 <th scope="col">Verein</th>
                 <th scope="col">Punkte</th>
                 @if ($has_qualifier)

@@ -125,7 +125,7 @@ class ApplyResultImport extends Command
 
         $lists = [
             'Neue Vereine' => $summary->clubs,
-            'Neue Fechter' => $summary->fencers,
+            'Neue Fechtende' => $summary->fencers,
             'Neue Aliase'  => $summary->aliases,
         ];
 

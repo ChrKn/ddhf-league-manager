@@ -42,7 +42,7 @@ class SeasonForm
                 Toggle::make('division_choice_required')
                     ->label('Kategorie muss gewählt werden')
                     ->helperText('Wer in dieser Saison in beiden Kategorien derselben Waffe gefochten '
-                        . 'hat, wird nur dort gewertet, wo er unter „Gewertete Fechter" eingetragen '
+                        . 'hat, wird nur dort gewertet, wo die Person unter „Gewertete Fechtende" eingetragen '
                         . 'ist — und ohne Eintrag in keiner von beiden. Bis 2024 stand dieselbe Person '
                         . 'in beiden Ranglisten, dort bleibt der Schalter aus.'),
                 TextInput::make('public_id')

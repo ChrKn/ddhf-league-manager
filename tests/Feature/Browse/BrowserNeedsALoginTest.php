@@ -45,7 +45,7 @@ class BrowserNeedsALoginTest extends TestCase
             'Übersicht'       => [Overview::class],
             'Verbände'        => [Federations::class],
             'Vereine'         => [Groups::class],
-            'Fechter'         => [Fencers::class],
+            'Fechtende'       => [Fencers::class],
             'Veranstaltungen' => [Events::class],
             'Turniere'        => [Tournaments::class],
             'Saisons'         => [Seasons::class],

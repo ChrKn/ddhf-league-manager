@@ -36,7 +36,7 @@ class TestMail extends Command
             $this->line('  Anmeldung     ' . (config('mail.mailers.smtp.username') ?: '— keine —'));
         }
 
-        $this->line('  Absender      ' . config('mail.from.name')
+        $this->line('  Absendeadresse' . config('mail.from.name')
             . ' <' . config('mail.from.address') . '>');
         $this->newLine();
 

@@ -20,7 +20,7 @@
 
     <h2>Ergebnisse</h2>
     <p class="lede">
-        Die Punkte stehen nirgends in der Datenbank — sie werden hier aus Teilnehmerzahl und
+        Die Punkte stehen nirgends in der Datenbank — sie werden hier aus der Zahl der Teilnehmenden und
         Platzierung mit dem Punkteschlüssel der Saison gerechnet, genau wie in der Rangliste.
         Ob ein Platz die Runde meint oder den echten Rang, sagt das Turniersystem oben.
     </p>

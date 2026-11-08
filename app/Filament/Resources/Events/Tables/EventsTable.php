@@ -34,7 +34,7 @@ class EventsTable
                     ->toggleable(),
                 TextColumn::make('organizers.name')
                     ->placeholder('Keine Angabe')
-                    ->label('Ausrichter')
+                    ->label('Ausrichtende')
                     ->badge()
                     ->separator()
                     ->toggleable(),

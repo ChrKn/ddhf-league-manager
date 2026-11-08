@@ -53,7 +53,7 @@ class AnnouncementForm
                     ->columnSpanFull(),
 
                 Select::make('user_id')
-                    ->label('Autor')
+                    ->label('Verfasst von')
                     ->relationship('author', 'name')
                     ->default(fn () => auth()->id())
                     ->searchable()

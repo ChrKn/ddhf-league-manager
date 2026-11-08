@@ -83,6 +83,6 @@ class ResultImportsTable
             ])
             ->emptyStateHeading('Noch nichts importiert')
             ->emptyStateDescription('Ein Import nimmt die Ergebnisdateien einer Veranstaltung auf, '
-                . 'gleicht Fechter und Vereine mit dem Bestand ab und legt daraus die Turniere an.');
+                . 'gleicht Fechtende und Vereine mit dem Bestand ab und legt daraus die Turniere an.');
     }
 }

@@ -23,7 +23,7 @@ class GroupForm
                     ->label('Öffentlich sichtbar')
                     ->helperText('Aus, wenn der Verein nicht genannt werden möchte. Ergebnisse, '
                         . 'Punkte und Ranglisten ändern sich dadurch nicht — der Name verschwindet '
-                        . 'nur aus der öffentlichen Seite und der API, auch an den Fechtern.'),
+                        . 'nur aus der öffentlichen Seite und der API, auch an den Fechtenden.'),
                 TextInput::make('name')
                     ->required(),
                 TextInput::make('abbreviation')
@@ -35,7 +35,7 @@ class GroupForm
                     ->searchable()
                     ->label('Verbände')
                     ->helperText('In der Regel ein Dachverband, dazu beliebig viele Verbünde. '
-                        . 'Mitgliedschaft im DDHF entscheidet, ob die Fechter dieses Vereins '
+                        . 'Mitgliedschaft im DDHF entscheidet, ob die Fechtenden dieses Vereins '
                         . 'in den Ranglisten stehen — ab dem nächsten Import, rückwirkend ändert '
                         . 'sich nichts.'),
                 Select::make('country')

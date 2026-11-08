@@ -25,11 +25,11 @@ class FencersRelationManager extends RelationManager
 {
     protected static string $relationship = 'fencers';
 
-    protected static ?string $title = 'Gewertete Fechter';
+    protected static ?string $title = 'Gewertete Fechtende';
 
-    protected static ?string $modelLabel = 'Fechter';
+    protected static ?string $modelLabel = 'Fechter:in';
 
-    protected static ?string $pluralModelLabel = 'Fechter';
+    protected static ?string $pluralModelLabel = 'Fechtende';
 
     public function table(Table $table): Table
     {
@@ -41,7 +41,7 @@ class FencersRelationManager extends RelationManager
                 // searching and sorting - the search already did, the sort did not and would
                 // have failed on an unknown column the first time anybody clicked the header.
                 TextColumn::make('display_name')
-                    ->label('Fechter')
+                    ->label('Fechter:in')
                     ->searchable(['first_name', 'last_name'])
                     ->sortable(['last_name', 'first_name']),
                 TextColumn::make('group.name')
@@ -52,7 +52,7 @@ class FencersRelationManager extends RelationManager
             ])
             ->headerActions([
                 AttachAction::make()
-                    ->label('Fechter eintragen')
+                    ->label('Fechter:in eintragen')
                     ->recordSelectSearchColumns(['first_name', 'last_name'])
                     // The club belongs in the label: the people who need an entry here are the ones
                     // who fenced both categories of a weapon, and two of those can share a name.

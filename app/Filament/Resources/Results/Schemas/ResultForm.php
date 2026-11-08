@@ -25,7 +25,7 @@ class ResultForm
                     ->relationship('fencer', 'id')
                     ->required()
                     ->getOptionLabelFromRecordUsing(fn(Fencer $record) => $record->display_name_with_group)
-                    ->label('Fechter'),
+                    ->label('Fechter:in'),
                 TextInput::make('placement')
                     ->required()
                     ->label('Platz')

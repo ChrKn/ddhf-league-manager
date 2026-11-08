@@ -29,7 +29,7 @@ class MergeFencers extends Command
         {merge* : Public IDs of the records folded into it}
         {--dry-run : Say what would happen and change nothing}';
 
-    protected $description = 'Legt doppelt erfasste Fechter zu einem Datensatz zusammen';
+    protected $description = 'Legt doppelt erfasste Fechtende zu einem Datensatz zusammen';
 
     /** Filled in from the merged records where the survivor has nothing and the sources agree. */
     private const FILLABLE_GAPS = [
@@ -81,7 +81,7 @@ class MergeFencers extends Command
         $fencer = Fencer::where('public_id', $publicId)->first();
 
         if (!$fencer) {
-            $this->error("Fechter nicht gefunden: {$publicId}");
+            $this->error("Fechter:in nicht gefunden: {$publicId}");
         }
 
         return $fencer;

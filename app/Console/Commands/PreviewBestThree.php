@@ -164,7 +164,7 @@ class PreviewBestThree extends Command
 
         Storage::disk('local')->put(self::NOTE, json_encode($made, JSON_PRETTY_PRINT));
 
-        $this->info('Vorschau steht: eine Best-Three-Rangliste mit drei Fechtern und fünf Turnieren.');
+        $this->info('Vorschau steht: eine Best-Three-Rangliste mit drei Fechtenden und fünf Turnieren.');
         $this->newLine();
         $this->line('  Öffentliche Seite:  /ranglisten/' . $made['public_id']);
         $this->line('  Englisch:           /en/standings/' . $made['public_id']);
@@ -203,7 +203,7 @@ class PreviewBestThree extends Command
         Storage::disk('local')->delete(self::NOTE);
 
         $this->info('Vorschau entfernt. ' . count($made['results']) . ' Ergebnisse, '
-            . count($made['tournaments']) . ' Turniere, ' . count($made['fencers']) . ' Fechter.');
+            . count($made['tournaments']) . ' Turniere, ' . count($made['fencers']) . ' Fechtende.');
 
         return self::SUCCESS;
     }

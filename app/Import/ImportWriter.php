@@ -45,8 +45,8 @@ class ImportWriter
      * mean different things is exactly how this got read as being about the club.
      */
     public const ACTION_LABELS = [
-        'use'    => 'Diesen Fechter verwenden',
-        'create' => 'Fechter neu anlegen',
+        'use'    => 'Diese Person verwenden',
+        'create' => 'Person neu anlegen',
         'skip'   => 'Zeile überspringen',
     ];
 
@@ -82,7 +82,7 @@ class ImportWriter
 
             if ($row['aktion'] === 'create_inactive') {
                 $problems[] = "Zeile {$line} (\"{$row['name_datei']}\"): aktion \"create_inactive\" gibt es nicht mehr. "
-                    . 'Eine Zeile, die der Veranstalter schon anonymisiert hat, ist "create" mit anonymisieren = 1.';
+                    . 'Eine Zeile, die schon von den Veranstaltenden anonymisiert wurde, ist "create" mit anonymisieren = 1.';
                 continue;
             }
 
@@ -115,8 +115,8 @@ class ImportWriter
             // The mistake the column exists to end: the placeholder stored as somebody's name,
             // which reads as anonymous and is marked as such nowhere.
             if (!$anonymise && NameMatcher::normalize($row['name_datei']) === NameMatcher::normalize(Fencer::ANONYMOUS_NAME)) {
-                $problems[] = "Zeile {$line} (\"{$row['name_datei']}\"): Das ist der Platzhalter für einen anonymen "
-                    . 'Starter, kein Name. Bitte anonymisieren ankreuzen.';
+                $problems[] = "Zeile {$line} (\"{$row['name_datei']}\"): Das ist der Platzhalter für anonyme "
+                    . 'Startende, kein Name. Bitte anonymisieren ankreuzen.';
             }
 
             if ($row['aktion'] === 'use' && $row['fechter_id'] === '') {
@@ -312,7 +312,7 @@ class ImportWriter
             $fencer = $this->fencers->byPublicId($row['fechter_id']);
 
             if (!$fencer) {
-                throw new RuntimeException("Fechter-ID unbekannt: {$row['fechter_id']} (Zeile \"{$row['name_datei']}\")");
+                throw new RuntimeException("Fechter:in-ID unbekannt: {$row['fechter_id']} (Zeile \"{$row['name_datei']}\")");
             }
 
             return $fencer;

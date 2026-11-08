@@ -152,14 +152,14 @@ class ImportPlanner
                     $notes[] = sprintf('"%s": %d von %d Ergebnissen, als unvollständig angemeldet.', $sheet, $counted, $decided);
                 } elseif ($counted !== $decided) {
                     $problems[] = sprintf(
-                        '"%s": die Datei listet %d Ergebnisse, festgelegt sind %d Teilnehmer. %s',
+                        '"%s": die Datei listet %d Ergebnisse, festgelegt sind %d Teilnehmende. %s',
                         $sheet,
                         $counted,
                         $decided,
                         // More results than starters has only the one explanation.
                         $counted > $decided
-                            ? 'Bitte die Teilnehmerzahl korrigieren.'
-                            : 'Bitte die Teilnehmerzahl korrigieren oder „Feld nur teilweise überliefert“ setzen.',
+                            ? 'Bitte die Zahl der Teilnehmenden korrigieren.'
+                            : 'Bitte die Zahl der Teilnehmenden korrigieren oder „Feld nur teilweise überliefert“ setzen.',
                     );
                 }
 
@@ -192,7 +192,7 @@ class ImportPlanner
             foreach ($checks as $what => $value) {
                 if ($value !== $expected) {
                     $problems[] = sprintf(
-                        '"%s": %s ist %d, %s %d Teilnehmer.',
+                        '"%s": %s ist %d, %s %d Teilnehmende.',
                         $sheet,
                         $what,
                         $value,
@@ -288,7 +288,7 @@ class ImportPlanner
                 'verein_guete'      => $group->confidence->label(),
                 'verein_wert'       => $group->found() ? sprintf('%.2f', $group->score) : '',
                 'hinweis'           => match (true) {
-                    $anonymous => 'Vom Veranstalter anonymisiert — wird ohne Namen und Verein angelegt',
+                    $anonymous => 'Von den Veranstaltenden anonymisiert — wird ohne Namen und Verein angelegt',
                     $duplicate => 'Ergebnis in diesem Turnier existiert bereits',
                     $doubtful  => 'Nur ein ungefährer Treffer — bitte ansehen',
                     default    => '',

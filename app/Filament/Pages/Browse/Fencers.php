@@ -10,7 +10,7 @@ class Fencers extends BrowsePage
 {
     protected static string | BackedEnum | null $navigationIcon = Heroicon::OutlinedUsers;
 
-    protected static ?string $navigationLabel = 'Fechter';
+    protected static ?string $navigationLabel = 'Fechtende';
 
     protected static ?string $slug = 'daten/fechter';
 

@@ -85,7 +85,7 @@ class ResultImportForm
                             ->helperText('Steht in der Vorlage nur als Text in der Titelzeile. '
                                 . 'Fehlt eins, lässt es sich unter „Turniersysteme“ anlegen.'),
                         TextInput::make('participants')
-                            ->label('Teilnehmer')
+                            ->label('Teilnehmende')
                             ->required()
                             ->integer()
                             ->minValue(1)
@@ -95,10 +95,10 @@ class ResultImportForm
                             ->label('Feld nur teilweise überliefert')
                             ->helperText('Nur ankreuzen, wenn die Datei weniger Ergebnisse listet, als das Feld '
                                 . 'groß war — etwa bei einer Aufzeichnung, die alle ohne Platzierung weggelassen '
-                                . 'hat. Die Teilnehmerzahl muss trotzdem stimmen, denn daran hängen die Punkte.'),
+                                . 'hat. Die Zahl der Teilnehmenden muss trotzdem stimmen, denn daran hängen die Punkte.'),
                     ])
                     ->helperText('Das Turnier entsteht beim Übernehmen aus Rangliste und Veranstaltung, mit dem '
-                        . 'Turniersystem und der Teilnehmerzahl von hier. Eine fehlerhafte Datei lässt sich oben '
+                        . 'Turniersystem und der Zahl der Teilnehmenden von hier. Eine fehlerhafte Datei lässt sich oben '
                         . 'mit „Datei ersetzen“ austauschen, ohne den Import neu anzulegen.'),
             ]);
     }
@@ -155,7 +155,7 @@ class ResultImportForm
         // when the files are matched, and a mismatch is far cheaper to see now.
         if ($sheet->row_count !== null && $sheet->participants !== null && !$sheet->partial
             && $sheet->row_count !== $sheet->participants) {
-            $notes[] = "Die Datei listet {$sheet->row_count} Ergebnisse, eingetragen sind {$sheet->participants} Teilnehmer.";
+            $notes[] = "Die Datei listet {$sheet->row_count} Ergebnisse, eingetragen sind {$sheet->participants} Teilnehmende.";
         }
 
         return $notes === []

@@ -22,7 +22,7 @@ class ReportDivisionChoices extends Command
         {--year= : Nur dieses Jahr}
         {--missing : Nur die Fälle ohne hinterlegte Wahl}';
 
-    protected $description = 'Zeigt, wer in zwei Kategorien einer Waffe gefochten hat und wo er gewertet wird';
+    protected $description = 'Zeigt, wer in zwei Kategorien einer Waffe gefochten hat und wo die Person gewertet wird';
 
     public function handle(): int
     {
@@ -133,7 +133,7 @@ class ReportDivisionChoices extends Command
         }
 
         $this->table(
-            ['Jahr', 'Disziplin', 'Fechter', 'Angetreten in', 'Gewertet in', 'Eigener Verband', 'Wahlpflicht'],
+            ['Jahr', 'Disziplin', 'Fechter:in', 'Angetreten in', 'Gewertet in', 'Eigener Verband', 'Wahlpflicht'],
             $zeilen,
         );
 
@@ -160,7 +160,7 @@ class ReportDivisionChoices extends Command
 
         if ($scharf > 0) {
             $this->warn(sprintf(
-                '%d davon in Saisons mit Wahlpflicht - diese Fechter stehen in KEINER der beiden Ranglisten.',
+                '%d davon in Saisons mit Wahlpflicht - diese Fechtenden stehen in KEINER der beiden Ranglisten.',
                 $scharf,
             ));
         }

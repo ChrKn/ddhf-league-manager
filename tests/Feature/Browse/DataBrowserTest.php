@@ -349,6 +349,6 @@ class DataBrowserTest extends TestCase
             ->assertOk()
             ->assertSee('Verbände')
             ->assertSee('Vereine ohne Verband')
-            ->assertSee('Fechter ohne Verein');
+            ->assertSee('Fechtende ohne Verein');
     }
 }

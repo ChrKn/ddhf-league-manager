@@ -33,7 +33,7 @@ class AnnouncementsTable
                     ->boolean()
                     ->state(fn (Announcement $record) => $record->isTranslated('en')),
                 TextColumn::make('author.name')
-                    ->label('Autor')
+                    ->label('Verfasst von')
                     ->placeholder('—'),
                 TextColumn::make('created_at')
                     ->label('Erstellt am')

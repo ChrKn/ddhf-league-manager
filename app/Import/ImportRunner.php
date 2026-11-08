@@ -53,7 +53,7 @@ class ImportRunner
             $missing = array_keys(array_filter([
                 'Rangliste'      => !$sheet->season_id,
                 'Turniersystem'  => !$sheet->tournament_format_id,
-                'Teilnehmerzahl' => !$sheet->participants,
+                'Zahl der Teilnehmenden' => !$sheet->participants,
             ]));
 
             if ($missing !== []) {
@@ -65,7 +65,7 @@ class ImportRunner
             // tournament with a full field, and nothing downstream would look wrong.
             if ($already = $sheet->tournamentAlreadyThere()) {
                 $problems[] = sprintf(
-                    '"%s": für diese Saison und diese Veranstaltung gibt es bereits ein Turnier (%s, %d Teilnehmer). '
+                    '"%s": für diese Saison und diese Veranstaltung gibt es bereits ein Turnier (%s, %d Teilnehmende). '
                     . 'Ein Import legt nur neue Turniere an.',
                     $sheet->original_name,
                     $already->public_id,

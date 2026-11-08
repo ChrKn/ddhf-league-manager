@@ -31,12 +31,12 @@ class AnonymizeFencerAction
             ->color('danger')
             ->visible(fn (Fencer $record) => !$record->isAnonymized())
             ->requiresConfirmation()
-            ->modalHeading('Fechter anonymisieren')
+            ->modalHeading('Fechter:in anonymisieren')
             ->modalDescription(
                 'Alle personenbezogenen Angaben werden gelöscht: Titel, Name, Geburtsname, '
                 . 'Geburtsdatum, Geschlecht, Nationalität und Vereinszugehörigkeit — auch die '
                 . 'Vereinsangabe an den einzelnen Ergebnissen. Platzierung und Verband bleiben am '
-                . 'Ergebnis stehen, damit der Fechter in den Ranglisten weiter an seiner Stelle '
+                . 'Ergebnis stehen, damit die Person in den Ranglisten weiter an ihrer Stelle '
                 . 'auftaucht, dort aber nur noch als „' . Fencer::ANONYMOUS_NAME . '“. '
                 . 'Das lässt sich nicht rückgängig machen.'
             )
@@ -56,7 +56,7 @@ class AnonymizeFencerAction
                 self::anonymize($record, $data['anonymization_reason'] ?? null);
 
                 Notification::make()
-                    ->title('Fechter anonymisiert')
+                    ->title('Fechter:in anonymisiert')
                     ->body('Der Datensatz enthält keine personenbezogenen Angaben mehr.')
                     ->success()
                     ->send();

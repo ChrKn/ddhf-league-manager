@@ -24,7 +24,7 @@ class GroupsTable
                 ToggleColumn::make('is_public')
                     ->label('Sichtbar')
                     ->tooltip('Aus: der Name erscheint weder auf der Seite noch in der API, '
-                        . 'auch nicht an den Fechtern. Ergebnisse und Punkte bleiben.'),
+                        . 'auch nicht an den Fechtenden. Ergebnisse und Punkte bleiben.'),
                 TextColumn::make('public_id')
                     ->searchable()
                     ->label('ID'),

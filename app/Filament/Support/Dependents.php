@@ -61,7 +61,7 @@ class Dependents
             // which is not the same question as which club somebody is in today.
             $record instanceof Group => [
                 'Ergebnisse' => fn (Group $g): int => Result::where('group_id', $g->id)->count(),
-                'Fechter'    => fn (Group $g): int => $g->fencers()->count(),
+                'Fechtende'  => fn (Group $g): int => $g->fencers()->count(),
             ],
 
             // SET NULL into tournaments: changes what a ruleset-mode standing adds up.
@@ -96,7 +96,7 @@ class Dependents
 
             $record instanceof Event => [
                 'Turniere'  => fn (Event $e): int => Tournament::where('event_id', $e->id)->count(),
-                'Ausrichter' => fn (Event $e): int => $e->organizers()->count(),
+                'Ausrichtende' => fn (Event $e): int => $e->organizers()->count(),
             ],
 
             // RESTRICT into tournaments. An open import that has picked it is only set back to

@@ -64,7 +64,7 @@ class ResultsTable
                     ->sortable(query: fn (Builder $query, string $direction): Builder => $query
                         ->orderBy(Fencer::select('last_name')->whereColumn('fencers.id', 'results.fencer_id'), $direction)
                         ->orderBy(Fencer::select('first_name')->whereColumn('fencers.id', 'results.fencer_id'), $direction))
-                    ->label('Fechter'),
+                    ->label('Fechter:in'),
                 TextColumn::make('fencer_group_name')
                     ->searchable()
                     ->sortable()

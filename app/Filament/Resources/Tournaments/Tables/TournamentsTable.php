@@ -69,7 +69,7 @@ class TournamentsTable
                     ))
                     ->label('Saison'),
                 TextColumn::make('participant_count')
-                    ->label('Teilnehmer'),
+                    ->label('Teilnehmende'),
                 TextColumn::make('ruleset.name')
                     ->searchable()
                     ->sortable()

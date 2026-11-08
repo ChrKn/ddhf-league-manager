@@ -20,9 +20,9 @@ class ResultExporter extends Exporter
             ExportColumn::make('tournament.public_id')
                 ->label('Turnier ID'),
             ExportColumn::make('fencer.display_name')
-                ->label('Fechter'),
+                ->label('Fechter:in'),
             ExportColumn::make('fencer.public_id')
-                ->label('Fechter-ID'),
+                ->label('Fechter:in-ID'),
             ExportColumn::make('fencer_group_name')
                 ->label('Gruppe'),
             ExportColumn::make('placement')

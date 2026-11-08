@@ -163,7 +163,7 @@ class CheckDeployment extends Command
         $this->check('Mailversand', $mailer !== 'log',
             $mailer === 'log'
                 ? 'steht auf "log" — Passwortmails gehen nirgendwo hin'
-                : $mailer . ', Absender ' . config('mail.from.address') . ' — mit mail:test prüfen');
+                : $mailer . ', Absendeadresse ' . config('mail.from.address') . ' — mit mail:test prüfen');
     }
 
     private function queue(): void

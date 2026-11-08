@@ -33,7 +33,7 @@ class EventExporter extends Exporter
             ExportColumn::make('location')
                 ->label('Ort'),
             ExportColumn::make('organizers.public_id')
-                ->label('Ausrichter-ID'),
+                ->label('IDs der Ausrichtenden'),
         ];
     }
 

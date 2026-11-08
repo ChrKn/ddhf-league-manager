@@ -193,7 +193,7 @@ class ResultSheetReader
         }
 
         if ($byValue === []) {
-            $notes[] = 'Die Spalte Turniergröße ist leer. Die Teilnehmerzahl bitte beim Zuordnen eintragen.';
+            $notes[] = 'Die Spalte Turniergröße ist leer. Die Zahl der Teilnehmenden bitte beim Zuordnen eintragen.';
 
             return [null, $notes];
         }

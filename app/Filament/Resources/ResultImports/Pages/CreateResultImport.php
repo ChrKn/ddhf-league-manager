@@ -64,7 +64,7 @@ class CreateResultImport extends CreateRecord
 
         Notification::make()
             ->title(count($intake->sheets) . ' Turnier(e) aus ' . count($uploads) . ' Datei(en) gelesen')
-            ->body('Jetzt je Turnier Rangliste, Turniersystem und Teilnehmerzahl festlegen.')
+            ->body('Jetzt je Turnier Rangliste, Turniersystem und Zahl der Teilnehmenden festlegen.')
             ->success()
             ->send();
 

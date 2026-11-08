@@ -38,7 +38,7 @@ class TournamentForm
                     ->required()
                     ->integer()
                     ->minValue(1)
-                    ->label('Teilnehmer'),
+                    ->label('Teilnehmende'),
                 DatePicker::make('start_date')
                     ->label('Gefochten am')
                     ->hint('Optional. Leer lassen, wenn das Datum der Veranstaltung gilt.')

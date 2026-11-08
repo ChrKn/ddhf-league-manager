@@ -78,7 +78,7 @@ class EditResultImport extends EditRecord
                 ->visible(fn (ResultImport $record): bool => $record->status->isOpen())
                 ->modalHeading('Datei durch eine korrigierte ersetzen')
                 ->modalDescription(fn (ResultImport $record): string => 'Rangliste, Turniersystem und eine von Hand '
-                    . 'eingetragene Teilnehmerzahl bleiben für jedes Turnier erhalten, das auch in der neuen Datei '
+                    . 'eingetragene Zahl der Teilnehmenden bleiben für jedes Turnier erhalten, das auch in der neuen Datei '
                     . 'steht. ' . self::resetWarning($record))
                 ->schema(fn (ResultImport $record): array => [
                     Select::make('file')
@@ -131,7 +131,7 @@ class EditResultImport extends EditRecord
 
         Notification::make()
             ->title(count($intake->sheets) . ' Turnier(e) übernommen')
-            ->body('Bitte Rangliste, Turniersystem und Teilnehmerzahl prüfen und neu abgleichen.')
+            ->body('Bitte Rangliste, Turniersystem und Zahl der Teilnehmenden prüfen und neu abgleichen.')
             ->success()
             ->send();
 

@@ -16,7 +16,7 @@ class EventForm
                 TextInput::make('name')
                     ->required(),
                 Select::make('organizers')
-                    ->label('Ausrichter')
+                    ->label('Ausrichtende')
                     ->relationship('organizers', 'name')
                     ->multiple(),
                 DatePicker::make('start_date')

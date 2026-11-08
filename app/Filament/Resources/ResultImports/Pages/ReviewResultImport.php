@@ -141,7 +141,7 @@ class ReviewResultImport extends Page implements HasTable
                 ->requiresConfirmation()
                 ->modalHeading('Diesen Import zurücknehmen?')
                 ->modalDescription('Die Ergebnisse dieses Imports werden entfernt, und ein Turnier, '
-                    . 'das dadurch leer zurückbleibt, ebenfalls. Angelegte Fechter und Vereine '
+                    . 'das dadurch leer zurückbleibt, ebenfalls. Angelegte Fechtende und Vereine '
                     . 'bleiben bestehen. Danach steht der Import wieder in der Prüfung und lässt '
                     . 'sich erneut übernehmen.')
                 ->modalSubmitActionLabel('Zurücknehmen')
@@ -173,7 +173,7 @@ class ReviewResultImport extends Page implements HasTable
         $lines = [$summary->results . ' Ergebnisse entfernt'];
 
         if ($summary->removedPlaceholders > 0) {
-            $lines[] = $summary->removedPlaceholders . ' anonyme Starter mit entfernt, weil ohne Ergebnis';
+            $lines[] = $summary->removedPlaceholders . ' anonyme Startende mit entfernt, weil ohne Ergebnis';
         }
 
         if ($summary->tournaments !== []) {
@@ -184,7 +184,7 @@ class ReviewResultImport extends Page implements HasTable
         // Named rather than counted: these are the ones somebody may want to clear away, and a
         // number alone would not tell them which.
         foreach ([
-            'Fechter ohne Ergebnis' => $summary->orphanedFencers,
+            'Fechtende ohne Ergebnis' => $summary->orphanedFencers,
             'Vereine ohne Ergebnis' => $summary->orphanedClubs,
         ] as $heading => $leftovers) {
             if ($leftovers !== []) {
@@ -234,7 +234,7 @@ class ReviewResultImport extends Page implements HasTable
         $lines = [$summary->results . ' Ergebnisse'];
 
         if ($summary->fencers !== []) {
-            $lines[] = count($summary->fencers) . ' Fechter neu angelegt';
+            $lines[] = count($summary->fencers) . ' Fechtende neu angelegt';
         }
 
         if ($summary->clubs !== []) {
@@ -292,7 +292,7 @@ class ReviewResultImport extends Page implements HasTable
                 // save button to forget. The fencer and what is to be done with them sit next to
                 // each other, because the action decides the fencer and nothing else.
                 SelectColumn::make('fencer_id')
-                    ->label('Fechter zuordnen')
+                    ->label('Fechter:in zuordnen')
                     ->optionsRelationship(
                         'fencer',
                         'last_name',
@@ -335,7 +335,7 @@ class ReviewResultImport extends Page implements HasTable
                 // record - so it takes the action and the assignment with it.
                 CheckboxColumn::make('anonymize')
                     ->label('Anonymisieren')
-                    ->tooltip('Vom Veranstalter anonymisiert: wird ohne Namen und Verein angelegt.')
+                    ->tooltip('Von den Veranstaltenden anonymisiert: wird ohne Namen und Verein angelegt.')
                     ->disabled(fn (): bool => !$this->editable())
                     ->afterStateUpdated(function (ResultImportRow $record, $state): void {
                         if ($state) {
@@ -343,7 +343,7 @@ class ReviewResultImport extends Page implements HasTable
                         }
                     }),
                 TextColumn::make('fencer_quality')
-                    ->label('Güte Fechter')
+                    ->label('Güte Zuordnung')
                     ->state(fn (ResultImportRow $record): string => self::quality(
                         $record->fencer_confidence,
                         $record->fencer_score,
@@ -400,8 +400,8 @@ class ReviewResultImport extends Page implements HasTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    self::decide('bulkUse', 'use', 'Zugeordnete Fechter verwenden'),
-                    self::decide('bulkCreate', 'create', 'Fechter neu anlegen'),
+                    self::decide('bulkUse', 'use', 'Zugeordnete Personen verwenden'),
+                    self::decide('bulkCreate', 'create', 'Personen neu anlegen'),
                     self::decide('bulkSkip', 'skip', 'Zeilen überspringen'),
                 ])->label('Für die Auswahl'),
             ])
@@ -444,7 +444,7 @@ class ReviewResultImport extends Page implements HasTable
                 if ($refused > 0) {
                     Notification::make()
                         ->title("{$refused} Zeilen ohne Vorschlag übergangen")
-                        ->body('Für sie gibt es keinen Fechter zu verwenden. Sie brauchen "Neu anlegen" '
+                        ->body('Für sie gibt es keine Person zu verwenden. Sie brauchen "Neu anlegen" '
                             . 'oder eine Zuordnung von Hand.')
                         ->warning()
                         ->send();

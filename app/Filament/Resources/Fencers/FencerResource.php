@@ -19,12 +19,12 @@ class FencerResource extends Resource
     protected static ?string $model = Fencer::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
-    protected static ?string $navigationLabel = 'Fechter';
+    protected static ?string $navigationLabel = 'Fechtende';
     protected static ?int $navigationSort = 200;
     protected static ?string $slug = 'fechter';
 
-    protected static ?string $modelLabel = 'Fechter';
-    protected static ?string $pluralModelLabel = 'Fechter';
+    protected static ?string $modelLabel = 'Fechter:in';
+    protected static ?string $pluralModelLabel = 'Fechtende';
 
     protected static ?string $recordTitleAttribute = 'Fechter';
 

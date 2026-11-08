@@ -52,7 +52,7 @@ class DataBrowser
             'counts' => [
                 ['label' => 'Verbände',       'value' => Federation::count(),  'href' => FederationsPage::getUrl()],
                 ['label' => 'Vereine',        'value' => Group::count(),       'href' => GroupsPage::getUrl()],
-                ['label' => 'Fechter',        'value' => Fencer::count(),      'href' => FencersPage::getUrl()],
+                ['label' => 'Fechtende',      'value' => Fencer::count(),      'href' => FencersPage::getUrl()],
                 ['label' => 'Veranstaltungen', 'value' => Event::count(),      'href' => EventsPage::getUrl()],
                 ['label' => 'Turniere',       'value' => Tournament::count(),  'href' => TournamentsPage::getUrl()],
                 ['label' => 'Ergebnisse',     'value' => Result::count(),      'href' => TournamentsPage::getUrl()],
@@ -64,8 +64,8 @@ class DataBrowser
             'notes' => [
                 'Vereine ohne Land'          => Group::whereNull('country')->count(),
                 'Vereine ohne Verband'       => Group::doesntHave('nationalFederations')->count(),
-                'Fechter ohne Verein'        => Fencer::whereNull('group_id')->count(),
-                'Fechter anonymisiert'       => Fencer::whereNotNull('anonymized_at')->count(),
+                'Fechtende ohne Verein'      => Fencer::whereNull('group_id')->count(),
+                'Fechtende anonymisiert'     => Fencer::whereNotNull('anonymized_at')->count(),
                 'Ergebnisse ohne Verein'     => Result::whereNull('group_id')->count(),
                 'Ergebnisse ohne Verband'    => Result::whereNull('federation_id')->count(),
                 'Turniere ohne Turniersystem' => Tournament::whereNull('tournament_format_id')->count(),
@@ -170,7 +170,7 @@ class DataBrowser
                 'federation'   => 'Verband',
                 'website_url'  => 'Website',
                 'is_active'    => 'Aktiv',
-                'fencers'      => 'Fechter',
+                'fencers'      => 'Fechtende',
                 'results'      => 'Ergebnisse',
             ],
             'rows' => $groups->map(fn (Group $group) => [
@@ -265,7 +265,7 @@ class DataBrowser
             ->get();
 
         return [
-            'title'   => 'Fechter',
+            'title'   => 'Fechtende',
             'columns' => [
                 'public_id'   => 'ID',
                 'name'        => 'Name',
@@ -330,7 +330,7 @@ class DataBrowser
                 'start_date'  => 'Beginn',
                 'end_date'    => 'Ende',
                 'location'    => 'Ort',
-                'organizers'  => 'Ausrichter',
+                'organizers'  => 'Ausrichtende',
                 'tournaments' => 'Turniere',
             ],
             'rows' => $events->map(fn (Event $event) => [
@@ -400,7 +400,7 @@ class DataBrowser
                 'format'            => 'Turniersystem',
                 'ruleset'           => 'Regelwerk',
                 'region'            => 'Zone',
-                'participant_count' => 'Teilnehmer',
+                'participant_count' => 'Teilnehmende',
                 'results'           => 'Ergebnisse',
             ],
             'rows' => $tournaments->map(fn (Tournament $tournament) => [
@@ -502,12 +502,12 @@ class DataBrowser
                 'Turniersystem' => $tournament->format,
                 'Regelwerk'     => $tournament->ruleset?->name,
                 'Zone'          => Regions::label($tournament->region),
-                'Teilnehmer'    => $tournament->participant_count,
+                'Teilnehmende'  => $tournament->participant_count,
                 'Punkteschlüssel' => $tournament->season?->scoring_matrix?->name,
             ],
             'columns' => [
                 'placement'         => 'Platz',
-                'fencer'            => 'Fechter',
+                'fencer'            => 'Fechter:in',
                 'group'             => 'Verein',
                 'fencer_group_name' => 'Verein laut Quelle',
                 'federation'        => 'Verband',

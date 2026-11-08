@@ -18,18 +18,18 @@ class UserResource extends Resource
 
     protected static string|null|\BackedEnum $navigationIcon = Heroicon::OutlinedUserGroup;
     protected static string|null|\UnitEnum $navigationGroup = 'Systemverwaltung';
-    protected static ?string $navigationLabel = 'Benutzer';
+    protected static ?string $navigationLabel = 'Konten';
     protected static ?string $slug = 'benutzer';
 
-    protected static ?string $modelLabel = 'Benutzer';
-    protected static ?string $pluralModelLabel = 'Benutzer';
+    protected static ?string $modelLabel = 'Konto';
+    protected static ?string $pluralModelLabel = 'Konten';
 
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
             TextInput::make('name')
                 ->required()
-                ->label('Benutzername'),
+                ->label('Name'),
             TextInput::make('email')
                 ->email()
                 ->required()
@@ -56,7 +56,7 @@ class UserResource extends Resource
     {
         return $table->columns([
             TextColumn::make('name')
-                ->label('Benutzername'),
+                ->label('Name'),
             TextColumn::make('email')
                 ->label('E-Mail'),
             TextColumn::make('created_at')

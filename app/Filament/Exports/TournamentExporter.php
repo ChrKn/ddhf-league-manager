@@ -20,7 +20,7 @@ class TournamentExporter extends Exporter
             ExportColumn::make('name')
                 ->label('Name'),
             ExportColumn::make('participant_count')
-                ->label('Anzahl Teilnehmer'),
+                ->label('Anzahl Teilnehmende'),
             ExportColumn::make('event.public_id')
                 ->label('Veranstaltung-ID'),
             ExportColumn::make('event.name')

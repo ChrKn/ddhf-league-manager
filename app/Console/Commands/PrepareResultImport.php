@@ -143,7 +143,7 @@ class PrepareResultImport extends Command
         $this->line(count($plan->rows) . ' Zeilen');
         $this->newLine();
 
-        foreach (['fechter' => 'Fechter', 'verein' => 'Vereine'] as $key => $heading) {
+        foreach (['fechter' => 'Fechtende', 'verein' => 'Vereine'] as $key => $heading) {
             $this->line("<comment>{$heading}</comment>");
 
             foreach (MatchConfidence::cases() as $case) {
@@ -173,8 +173,8 @@ class PrepareResultImport extends Command
         }
 
         $this->warn("{$open} Zeilen brauchen eine Entscheidung in der Spalte \"aktion\".");
-        $this->line('  use    = den zugeordneten Fechter verwenden (fechter_id ggf. vorher korrigieren)');
-        $this->line('  create = Fechter neu anlegen (eine fechter_id in der Zeile wird dann nicht beachtet)');
+        $this->line('  use    = die zugeordnete Person verwenden (fechter_id ggf. vorher korrigieren)');
+        $this->line('  create = Person neu anlegen (eine fechter_id in der Zeile wird dann nicht beachtet)');
         $this->line('  skip   = Zeile überspringen');
         $this->newLine();
         // The column decides the fencer and nothing else, and it says so nowhere in the file.
