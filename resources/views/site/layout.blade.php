@@ -434,6 +434,44 @@
         dl.facts dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
         dl.facts dd { margin: 0; font-size: .95rem; }
 
+        /* --- scoring matrix ------------------------------------------------- */
+
+        /* Placements down the side, field sizes across. The row headings stay put while the
+           columns scroll sideways on a narrow screen. */
+        table.matrix { font-size: .88rem; }
+        table.matrix thead th.span { text-align: center; border-bottom: 0; padding-bottom: 0; }
+        table.matrix thead th.corner { vertical-align: bottom; }
+        table.matrix td, table.matrix thead th.num { padding: .4rem .7rem; }
+
+        table.matrix tbody th {
+            position: sticky;
+            left: 0;
+            z-index: 1;
+            background: var(--panel);
+            text-align: left;
+            font-weight: 600;
+            white-space: nowrap;
+            padding: .4rem .9rem;
+            border-bottom: 1px solid var(--line);
+            border-right: 1px solid var(--line);
+        }
+        table.matrix thead th.corner { position: sticky; left: 0; z-index: 2; background: var(--panel); border-right: 1px solid var(--line); }
+
+        /* The place and the round side by side, the round in a fixed column so they line up. */
+        table.matrix .place { display: inline-block; min-width: 3.6rem; font-variant-numeric: tabular-nums; }
+        table.matrix .round { font-weight: 400; color: var(--muted); font-size: .84rem; }
+        table.matrix tr.pools th .place { min-width: 0; }
+
+        /* Red under dark text - the tint stays light enough that the ink keeps its contrast, and
+           the rule about red only ever on white is not touched: nothing is written in red. */
+        table.matrix td { background: color-mix(in srgb, var(--accent) calc(var(--heat, 0) * 28%), transparent); }
+        table.matrix td.zero { color: var(--muted); }
+        table.matrix tr.pools td, table.matrix tr.pools th { border-top: 2px solid var(--line); }
+        table.matrix tbody tr:hover th { background: var(--accent-soft); }
+
+        h2.used-in { margin-top: 2rem; font-size: .74rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+        ul.used-in { margin: .5rem 0 0; padding-left: 1.1rem; font-size: .92rem; columns: 2 16rem; }
+
         .note {
             background: var(--accent-soft);
             border: 1px solid var(--line);

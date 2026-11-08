@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Announcement;
 use App\Models\Discipline;
 use App\Models\Division;
+use App\Models\ScoringMatrix;
 use App\Models\Season;
 use App\Models\Tournament;
 use App\Standings\FencerSearch;
+use App\Standings\Placement;
+use App\Standings\ScoringMatrixEvaluator;
 use App\Standings\SeasonRanking;
 use App\Standings\TournamentResults;
 use App\Support\SiteUrl;
@@ -178,10 +181,20 @@ class SiteController extends Controller
         // fencers renumbered one to five would be a different and untrue statement.
         $shown = $this->onlyClub($rows, $request->query('verein'));
 
+        $matrix = $season->scoring_matrix;
+
         return view('site.standing', [
             'title'   => $season->display_name,
             'json'    => route('data.standing', $season->public_id),
             'season'  => $season,
+            'facts'   => array_filter([
+                __('site.standing.season')  => $season->year,
+                __('site.standing.scoring') => $ranking['mode']?->label(),
+            ], fn ($value) => $value !== null && $value !== ''),
+            'scoring' => $matrix ? [
+                'name' => $matrix->name,
+                'href' => SiteUrl::to('scoring', $matrix->public_id),
+            ] : null,
             'rows'    => $shown,
             'total'   => count($rows),
             'mode'    => $ranking['mode'],
@@ -288,7 +301,74 @@ class SiteController extends Controller
         ]);
     }
 
+    /**
+     * How placements become points, for the standings that use it.
+     *
+     * Reached from a standing and nowhere else: no list of schemes, no place in the menu or the
+     * sitemap, and `noindex` - it explains a table, it is not something to land on from a search.
+     * A scheme only held-back seasons use answers as if it did not exist, like those seasons do.
+     *
+     * Only matrices so far. A formula would come through here as well and branch on its kind;
+     * the address stays the same, which is why the slug says "scoring" and not "matrix".
+     */
+    public function scoring(string $public_id)
+    {
+        $matrix = ScoringMatrix::where('public_id', $public_id)
+            ->whereHas('seasons', fn ($query) => $query->public())
+            ->firstOrFail();
+
+        // A matrix that does not decode is an empty table here rather than an error page. The
+        // standing that uses it reports the problem where it matters.
+        try {
+            $table = ScoringMatrixEvaluator::fromJson($matrix->matrix)->table();
+        } catch (\InvalidArgumentException) {
+            $table = (new ScoringMatrixEvaluator([]))->table();
+        }
+        $locale = App::getLocale();
+
+        $seasons = $matrix->seasons()
+            ->public()
+            ->with('standing.discipline', 'standing.division')
+            ->get()
+            ->sortBy(fn (Season $season) => sprintf(
+                '%04d|%s',
+                9999 - (int) $season->year,
+                $season->standing?->display_name ?? ''
+            ))
+            ->values();
+
+        return view('site.scoring', [
+            'title'     => $matrix->name,
+            'bands'     => array_map(fn (array $band) => $this->rangeLabel($band['min'], $band['max']), $table['bands']),
+            'rows'      => array_map(fn (array $row) => [
+                'label'  => $this->rangeLabel($row['from'], $row['to']),
+                'round'  => $row['round'] === null ? null : Placement::from($row['round'])->label($locale),
+                'points' => $row['points'],
+            ], $table['rows']),
+            'pools'     => $table['pools'],
+            'threshold' => $table['threshold'],
+            'max'       => max(1, $table['max']),
+            'seasons'   => $seasons->map(fn (Season $season) => [
+                'name' => $season->display_name,
+                'href' => SiteUrl::to('standing', $season->public_id),
+            ])->all(),
+        ]);
+    }
+
     /* ----------------------------------------------------------------- helpers */
+
+    /**
+     * "5–8", "1", "ab 129", "bis 24" - a span of places or entrants as the matrix page heads it.
+     */
+    private function rangeLabel(int $from, ?int $to): string
+    {
+        return match (true) {
+            $to === null  => __('site.scoring.from', ['n' => $from]),
+            $from === 0   => __('site.scoring.up_to', ['n' => $to]),
+            $from === $to => (string) $from,
+            default       => $from . '–' . $to,
+        };
+    }
 
     /**
      * When a tournament was fenced, written for a reader.

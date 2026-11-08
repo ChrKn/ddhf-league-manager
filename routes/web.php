@@ -34,6 +34,10 @@ $site = function (string $locale) {
     Route::get("/{$slug['tournaments']}/{public_id}", [SiteController::class, 'tournament'])->name('tournament');
     Route::get("/{$slug['search']}", [SiteController::class, 'search'])->name('search');
     Route::get("/{$slug['news']}", [SiteController::class, 'news'])->name('news');
+    // How a standing turns placements into points. One page per scheme and no list of them: it is
+    // reached from a standing, not browsed. The slug is the general one on purpose - a formula
+    // instead of a matrix will live at the same address.
+    Route::get("/{$slug['scoring']}/{public_id}", [SiteController::class, 'scoring'])->name('scoring');
 };
 
 /*

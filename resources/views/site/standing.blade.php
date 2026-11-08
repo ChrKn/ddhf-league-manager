@@ -9,10 +9,26 @@
     {{-- The standing's own name comes from the database and stays German in both languages. --}}
     <h1>{{ $season->standing?->display_name ?? $title }}</h1>
     <p class="lede">
-        {{ __('site.standing.season') }} {{ $season->year }}
-        @if ($mode) · {{ __('site.standing.scoring') }}: {{ $mode->label() }} @endif
-        · <a href="{{ $url('standings') }}">{{ __('site.standing.all') }}</a>
+        <a href="{{ $url('standings') }}">{{ __('site.standing.back') }}</a>
     </p>
+
+    <div class="panel">
+        <dl class="facts">
+            @foreach ($facts as $label => $value)
+                <div>
+                    <dt>{{ $label }}</dt>
+                    <dd>{{ $value }}</dd>
+                </div>
+            @endforeach
+            @if ($scoring)
+                <div>
+                    <dt>{{ __('site.standing.points_scheme') }}</dt>
+                    {{-- The matrix's own name, from the database, German in both languages. --}}
+                    <dd><a href="{{ $scoring['href'] }}">{{ $scoring['name'] }}</a></dd>
+                </div>
+            @endif
+        </dl>
+    </div>
 
     @if ($step)
         <div class="note">

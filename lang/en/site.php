@@ -71,7 +71,8 @@ return [
     'standing' => [
         'season'           => 'Season',
         'scoring'          => 'Scoring',
-        'all'              => 'all standings',
+        'back'             => '← all standings',
+        'points_scheme'    => 'Points',
         'show'             => 'show :count',
         'anonymised'       => 'anonymised',
         'not_counted'      => 'does not count',
@@ -87,6 +88,19 @@ return [
         'same'             => 'unchanged',
         'new'              => 'new',
         'new_long'         => 'new in this standing',
+    ],
+
+    'scoring' => [
+        'lede'         => 'Points depend on the number of participants (column) and the place or round in which someone went out (row).',
+        'used_in'      => 'Used in',
+        'place'        => 'Place',
+        'participants' => 'Participants',
+        'pools'        => 'Out in the pools',
+        'from'         => ':n+',
+        'up_to'        => 'up to :n',
+        'threshold'    => 'Below :count participants, nobody earns points.',
+        'zero'         => '· = 0 points',
+        'empty'        => 'No table has been entered for this scoring.',
     ],
 
     'tournaments' => [

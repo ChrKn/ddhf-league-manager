@@ -78,6 +78,109 @@ final class ScoringMatrixEvaluator
     }
 
     /**
+     * The matrix laid out for reading: one column per field size, one row per placement column.
+     *
+     * Every cell is looked up the way a result is scored - pointsForRank() at the first place of
+     * the row - so the page shows what is computed, odd boundaries included (2019 has a band
+     * that starts at 25 and a placement column that starts at 40). Rows a round can also land in
+     * carry that round; pointsForRound() finds exactly that row for it.
+     *
+     * Bands at the bottom that award nothing at all are not columns: they are the threshold below
+     * which a tournament earns nobody anything, and a column of zeros says that less clearly than
+     * one sentence does.
+     *
+     * The pool exit is only a row where every band names it. A matrix that predates the column
+     * scores a pool exit as the field size, which differs per tournament and is no single number.
+     *
+     * @return array{
+     *     bands: list<array{min: int, max: ?int}>,
+     *     rows: list<array{from: int, to: ?int, round: ?string, points: list<int>}>,
+     *     pools: ?list<int>,
+     *     threshold: ?int,
+     *     max: int,
+     * }
+     */
+    public function table(): array
+    {
+        $ascending = array_reverse($this->matrix);
+        $dropped = false;
+
+        // Leading bands that score nothing at all - points and pool exit - become the threshold.
+        while ($ascending !== [] && self::awardsNothing($ascending[0])) {
+            array_shift($ascending);
+            $dropped = true;
+        }
+
+        $bands = [];
+
+        foreach ($ascending as $index => $rule) {
+            $next = $ascending[$index + 1]['participants']['min'] ?? null;
+            $bands[] = [
+                'min' => (int) ($rule['participants']['min'] ?? 0),
+                'max' => $next === null ? null : (int) $next - 1,
+            ];
+        }
+
+        $starts = [];
+        $rounds = [];
+
+        foreach ($ascending as $rule) {
+            foreach ($rule['points'] ?? [] as $entry) {
+                $from = (int) ($entry['place']['min'] ?? 0);
+                $starts[$from] = true;
+
+                if (isset($entry['round'])) {
+                    $rounds[$from] ??= $entry['round'];
+                }
+            }
+        }
+
+        ksort($starts);
+        $starts = array_keys($starts);
+
+        $rows = [];
+        $max = 0;
+
+        foreach ($starts as $index => $from) {
+            $points = array_map(fn (array $rule) => $this->pointsForRank($rule, $from), $ascending);
+            $max = max($max, ...($points ?: [0]));
+
+            $rows[] = [
+                'from'   => $from,
+                'to'     => isset($starts[$index + 1]) ? $starts[$index + 1] - 1 : null,
+                'round'  => $rounds[$from] ?? null,
+                'points' => $points,
+            ];
+        }
+
+        $pools = null;
+
+        if ($ascending !== [] && array_all($ascending, fn (array $rule) => isset($rule['pools']))) {
+            $pools = array_map(fn (array $rule) => (int) $rule['pools'], $ascending);
+            $max = max($max, ...$pools);
+        }
+
+        return [
+            'bands'     => $bands,
+            'rows'      => $rows,
+            'pools'     => $pools,
+            'threshold' => $dropped && $bands !== [] ? $bands[0]['min'] : null,
+            'max'       => $max,
+        ];
+    }
+
+    private static function awardsNothing(array $rule): bool
+    {
+        foreach ($rule['points'] ?? [] as $entry) {
+            if (($entry['place']['points'] ?? 0) > 0) {
+                return false;
+            }
+        }
+
+        return ($rule['pools'] ?? 0) <= 0;
+    }
+
+    /**
      * The rules are sorted by descending participant threshold, so the first match is the most
      * specific one.
      */

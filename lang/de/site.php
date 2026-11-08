@@ -67,7 +67,8 @@ return [
     'standing' => [
         'season'           => 'Saison',
         'scoring'          => 'Auswertung',
-        'all'              => 'alle Ranglisten',
+        'back'             => '← alle Ranglisten',
+        'points_scheme'    => 'Punktevergabe',
         'show'             => ':count anzeigen',
         'anonymised'       => 'anonymisiert',
         'not_counted'      => 'zählt nicht',
@@ -83,6 +84,19 @@ return [
         'same'             => 'unverändert',
         'new'              => 'neu',
         'new_long'         => 'neu in der Rangliste',
+    ],
+
+    'scoring' => [
+        'lede'         => 'Die Punkte richten sich nach der Zahl der Teilnehmenden (Spalte) und dem Platz oder der Runde, in der jemand ausgeschieden ist (Zeile).',
+        'used_in'      => 'Verwendet in',
+        'place'        => 'Platz',
+        'participants' => 'Teilnehmende',
+        'pools'        => 'Ausgeschieden in den Pools',
+        'from'         => 'ab :n',
+        'up_to'        => 'bis :n',
+        'threshold'    => 'Unter :count Teilnehmenden gibt es keine Punkte.',
+        'zero'         => '· = 0 Punkte',
+        'empty'        => 'Für diese Punktevergabe ist keine Tabelle hinterlegt.',
     ],
 
     'tournaments' => [
