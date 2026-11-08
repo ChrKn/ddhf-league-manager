@@ -4,12 +4,15 @@ Notable changes to the DDHF standings system.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).  
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 1.7.0 - 2026-11-09
 
 ### Added
 - A page per scoring matrix (`/wertung/{id}`, `/en/scoring/{id}`), linked from a new
   info panel on every standing. Not indexed, not in the sitemap.
 - The main menu folds into a burger below 768 px.
+- The footer shows the version, read from this file, with a link to it as a page at
+  `/changelog`, not indexed and not in the sitemap. `deploy:check` compares the version
+  with the latest git tag.
 
 ### Changed
 - External links in announcements open in a new tab.

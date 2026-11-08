@@ -493,6 +493,25 @@ a name wins over an alias, so such a row would be stored and then never read. Th
 the recorded decision standing, writes the results under the club the review screen picked, and says
 in the summary that the spelling was not remembered. The panel refuses the entry outright.
 
+## Releasing
+
+The version is written down in one place: the topmost release heading in `CHANGELOG.md`. The footer
+reads it from there and links the file as a page at `/changelog` — English in both languages. Nothing
+else carries a number, so there is nothing else to bump.
+
+Count per release, not per commit: anything breaking raises the first number, otherwise any new
+feature the second, otherwise the third — and the numbers to the right go back to 0. Breaking here
+means somebody who relied on something has to change: a field in the API or under `/data`, a public
+address, the import template, or a deployment that needs more than `migrate`.
+
+1. Note changes under `## Unreleased` as they are made.
+2. On `develop`, rename that heading to `## 1.7.0 - <date>` and commit it.
+3. `git switch master`, `git merge --no-ff develop -m "Release 1.7.0"`, `git tag v1.7.0`.
+
+Tags go on `master` only, always with a `v`. `php artisan deploy:check` holds the version in the
+changelog against the nearest tag and fails when they differ — the sign of a release tagged without
+renaming *Unreleased*. On a server without a repository it says so and moves on.
+
 ## Deploying
 
 Nothing is deployed yet, and two things have to be settled before anything is — see *The road to v1*.

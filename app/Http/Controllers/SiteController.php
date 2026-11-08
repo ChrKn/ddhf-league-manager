@@ -13,6 +13,7 @@ use App\Standings\Placement;
 use App\Standings\ScoringMatrixEvaluator;
 use App\Standings\SeasonRanking;
 use App\Standings\TournamentResults;
+use App\Support\Changelog;
 use App\Support\SiteUrl;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -352,6 +353,23 @@ class SiteController extends Controller
                 'name' => $season->display_name,
                 'href' => SiteUrl::to('standing', $season->public_id),
             ])->all(),
+        ]);
+    }
+
+    /**
+     * What changed from release to release - CHANGELOG.md, rendered. English in both languages;
+     * see App\Support\Changelog.
+     */
+    public function changelog()
+    {
+        $html = Changelog::html();
+
+        abort_if($html === null, 404);
+
+        return view('site.changelog', [
+            'title'       => 'Changelog',
+            'description' => __('site.changelog.description'),
+            'html'        => $html,
         ]);
     }
 

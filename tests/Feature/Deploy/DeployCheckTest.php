@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Deploy;
 
+use App\Support\Changelog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Process;
 use Tests\TestCase;
 
 /**
@@ -15,6 +17,35 @@ use Tests\TestCase;
 class DeployCheckTest extends TestCase
 {
     use RefreshDatabase;
+
+    /**
+     * git is never really asked here. The working copy's nearest tag is whatever was last tagged,
+     * and between renaming "Unreleased" and tagging, a real call would turn the suite red.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->tag = 'v' . Changelog::version();
+
+        // Read when git is asked rather than now, so a test can change the answer. Every process,
+        // because the command goes in as an array and a pattern like "git describe*" does not match
+        // it - and an unmatched command would quietly run for real.
+        Process::preventStrayProcesses();
+        Process::fake(['*' => fn () => $this->tag === null
+            ? Process::result(exitCode: 128, errorOutput: 'fatal: not a git repository')
+            : Process::result(output: $this->tag . "\n")]);
+    }
+
+    /** What `git describe --tags` answers; null for no repository. */
+    private ?string $tag = null;
+
+    protected function tearDown(): void
+    {
+        Changelog::usePath(null);
+
+        parent::tearDown();
+    }
 
     /** Everything a production server should look like, so a single change stands out. */
     private function asProduction(array $overrides = []): void
@@ -144,5 +175,35 @@ class DeployCheckTest extends TestCase
         $this->artisan('deploy:check')
             ->expectsOutputToContain(PHP_VERSION)
             ->assertSuccessful();
+    }
+
+    public function test_a_changelog_that_does_not_match_the_tag_fails_it(): void
+    {
+        $this->asProduction();
+        $this->tag = 'v99.0.0';
+
+        $this->artisan('deploy:check')
+            ->expectsOutputToContain('das letzte Tag ist v99.0.0')
+            ->assertFailed();
+    }
+
+    public function test_no_repository_to_compare_with_is_not_a_fault(): void
+    {
+        $this->asProduction();
+        $this->tag = null;
+
+        $this->artisan('deploy:check')
+            ->expectsOutputToContain('kein Tag zum Abgleich')
+            ->assertSuccessful();
+    }
+
+    public function test_a_missing_changelog_fails_it(): void
+    {
+        $this->asProduction();
+        Changelog::usePath(base_path('does-not-exist.md'));
+
+        $this->artisan('deploy:check')
+            ->expectsOutputToContain('CHANGELOG.md fehlt')
+            ->assertFailed();
     }
 }

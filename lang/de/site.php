@@ -156,6 +156,12 @@ return [
         'follow'          => 'Folgen',
         'imprint'         => 'Impressum',
         'privacy'         => 'Datenschutz',
+        'version'         => 'Version :version',
+    ],
+
+    'changelog' => [
+        'lede'        => 'Was sich von Version zu Version geändert hat. Nur auf Englisch.',
+        'description' => 'Änderungen am Ranglistensystem des DDHF, Version für Version.',
     ],
 
     'search' => [

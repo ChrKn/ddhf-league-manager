@@ -38,6 +38,9 @@ $site = function (string $locale) {
     // reached from a standing, not browsed. The slug is the general one on purpose - a formula
     // instead of a matrix will live at the same address.
     Route::get("/{$slug['scoring']}/{public_id}", [SiteController::class, 'scoring'])->name('scoring');
+    // CHANGELOG.md as a page, linked from the version in the footer. The same address in both
+    // languages and the same English text on both: only the page around it follows the language.
+    Route::get("/{$slug['changelog']}", [SiteController::class, 'changelog'])->name('changelog');
 };
 
 /*

@@ -160,6 +160,12 @@ return [
         'follow'          => 'Follow',
         'imprint'         => 'Imprint',
         'privacy'         => 'Privacy',
+        'version'         => 'Version :version',
+    ],
+
+    'changelog' => [
+        'lede'        => 'What changed from release to release.',
+        'description' => 'Changes to the DDHF standings system, release by release.',
     ],
 
     'search' => [

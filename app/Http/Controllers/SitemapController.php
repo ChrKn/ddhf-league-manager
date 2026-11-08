@@ -23,7 +23,8 @@ class SitemapController extends Controller
      * Every page of the site, once per language, each naming both of its versions.
      *
      * The search is not in it - findable on the site, not through a search engine - nor are the
-     * scoring pages, which explain a standing rather than stand on their own. Neither is
+     * scoring pages, which explain a standing rather than stand on their own, nor the changelog,
+     * which is for whoever maintains the system. All three are noindex. Neither is
      * any filtered address, which would only be the same page again. No lastmod: the newest
      * updated_at does not move when a result is deleted, and a date that is sometimes wrong is
      * worse than none. Only released seasons and their tournaments, through the same scopes the

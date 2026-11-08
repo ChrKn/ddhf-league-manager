@@ -540,6 +540,36 @@
         }
 
         .foot-bottom ul { display: flex; gap: 1.1rem; list-style: none; margin: 0; padding: 0; }
+        .foot-bottom .version { font-variant-numeric: tabular-nums; }
+
+        /* --- changelog ----------------------------------------------------- */
+
+        .changelog { padding: .4rem 1.4rem 1.2rem; }
+        .changelog h2 {
+            font-size: 1.15rem;
+            margin: 1.6rem 0 .2rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid var(--line);
+            font-variant-numeric: tabular-nums;
+            scroll-margin-top: 1rem;
+        }
+        .changelog h2:first-child { border-top: 0; padding-top: .6rem; margin-top: 0; }
+        .changelog h3 {
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--muted);
+            margin: 1rem 0 .3rem;
+        }
+        .changelog ul { margin: 0; padding-left: 1.2rem; }
+        .changelog li { margin: .15rem 0; }
+        .changelog p { margin: .4rem 0; }
+        .changelog code {
+            font-size: .88em;
+            background: var(--tint);
+            padding: .05rem .3rem;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -623,6 +653,15 @@
 
         <div class="foot-bottom">
             <span>© {{ date('Y') }} Deutscher Dachverband für historisches Fechten e.&nbsp;V.</span>
+            {{-- Read from CHANGELOG.md - see App\Support\Changelog. Left out rather than guessed
+                 where the file names no release. --}}
+            @php($version = \App\Support\Changelog::version())
+            @if ($version)
+                <span class="version">
+                    {{ __('site.footer.version', ['version' => $version]) }}
+                    · <a href="{{ $url('changelog') }}" lang="en">Changelog</a>
+                </span>
+            @endif
             <ul>
                 <li><a href="https://ddhf.de/impressum">{{ __('site.footer.imprint') }}</a></li>
                 <li><a href="https://ddhf.de/datenschutz">{{ __('site.footer.privacy') }}</a></li>

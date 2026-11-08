@@ -2,8 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Support\Changelog;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -45,6 +47,7 @@ class CheckDeployment extends Command
         $this->mail();
         $this->queue();
         $this->assets();
+        $this->version();
 
         return $this->report();
     }
@@ -207,6 +210,33 @@ class CheckDeployment extends Command
 
         $this->check('Panel-Dateien', $published,
             $published ? 'veröffentlicht' : 'fehlen — php artisan filament:assets');
+    }
+
+    /**
+     * The version in the footer comes out of CHANGELOG.md. Where the code arrived as a repository,
+     * the nearest tag says which release it is, and the two have to agree - a release tagged
+     * without renaming "Unreleased" would otherwise go on showing the previous number. Without a
+     * repository there is nothing to compare with, which is not a fault.
+     */
+    private function version(): void
+    {
+        $version = Changelog::version();
+
+        if ($version === null) {
+            $this->check('Version', false, 'CHANGELOG.md fehlt oder nennt kein Release');
+
+            return;
+        }
+
+        // Fails quietly where there is no git or no repository - both leave nothing to compare.
+        $result = Process::path(base_path())->run(['git', 'describe', '--tags', '--abbrev=0']);
+        $tag = $result->successful() ? ltrim(trim($result->output()), 'v') : null;
+
+        $this->check('Version', $tag === null || $tag === $version, match (true) {
+            $tag === null     => $version . ' laut CHANGELOG.md (kein Tag zum Abgleich)',
+            $tag === $version => $version . ', passt zum Tag',
+            default           => "CHANGELOG.md sagt {$version}, das letzte Tag ist v{$tag}",
+        });
     }
 
     private function check(string $label, bool $passed, string $detail): void
