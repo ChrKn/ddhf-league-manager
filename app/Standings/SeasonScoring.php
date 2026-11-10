@@ -24,6 +24,9 @@ use App\Models\Tournament;
  *   lifted. A field below the table's first real column earns nobody anything, because there is
  *   nothing to read the points from.
  *
+ * A decision of the federation, `tournaments.scored_on_decision`, lifts the first half for one
+ * tournament - as if the season had no threshold - and never the second.
+ *
  * The points always come from the season's matrix, at the field size that was actually fenced.
  * Nothing here can move a tournament into a bigger column than its field.
  */
@@ -60,9 +63,28 @@ final class SeasonScoring
 
     /**
      * Whether the season's own threshold lets this tournament through. True where the season has
-     * none: the matrix then decides alone.
+     * none - the matrix then decides alone - and true where the federation decided to score it.
      */
     public function clearsThreshold(Tournament $tournament): bool
+    {
+        return $this->reachesThreshold($tournament) || $tournament->isScoredOnDecision();
+    }
+
+    /**
+     * Whether it counts only because the federation decided so: scored, and below the season's
+     * threshold. What the standing marks, so nobody takes it for a tournament that made the cut.
+     *
+     * A decision on a tournament that reached the threshold anyway is still on record and still
+     * shown on its page, but it decided nothing, so there is nothing to mark in the table.
+     */
+    public function scoresOnlyByDecision(Tournament $tournament): bool
+    {
+        return $tournament->isScoredOnDecision()
+            && !$this->reachesThreshold($tournament)
+            && $this->scores($tournament);
+    }
+
+    private function reachesThreshold(Tournament $tournament): bool
     {
         return $this->min_participants === null
             || (int) $tournament->participant_count >= $this->min_participants;

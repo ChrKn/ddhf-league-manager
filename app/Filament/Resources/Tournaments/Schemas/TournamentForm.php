@@ -7,7 +7,11 @@ use App\Models\Event;
 use App\Models\Season;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Callout;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class TournamentForm
@@ -44,6 +48,7 @@ class TournamentForm
                 // Evidence, and nothing else: no point is ever read at this number. See
                 // SeasonScoring::pointsFor().
                 TextInput::make('registered_count')
+                    ->live(onBlur: true)
                     ->integer()
                     ->minValue(0)
                     ->nullable()
@@ -79,6 +84,43 @@ class TournamentForm
                     ->disabled()
                     ->placeholder('Automatisch generiert')
                     ->label('ID'),
+
+                // Shaped after the Kulanzregelung on a result: grounds instead of a switch, so a
+                // decision never stands there without saying why it was made.
+                Section::make('Wertung auf Beschluss')
+                    ->description('Nur ausfüllen, wenn der Verband beschlossen hat, dieses Turnier zu werten, '
+                        . 'obwohl weniger Fechtende angetreten sind, als die Saison verlangt. Gewertet wird '
+                        . 'dann nach dem Punkteschlüssel der Saison, in der Spalte der Angetretenen — nie in '
+                        . 'der der Gemeldeten. Wo der Punkteschlüssel selbst nichts vergibt, ändert auch ein '
+                        . 'Beschluss nichts.')
+                    ->schema([
+                        Textarea::make('scored_on_decision')
+                            ->live(onBlur: true)
+                            ->label('Begründung')
+                            ->placeholder('Leer lassen — der Normalfall')
+                            ->rows(3)
+                            ->helperText('Wird öffentlich am Turnier angezeigt. Wer hat was beschlossen, '
+                                . 'auf welcher Grundlage. Keine Namen oder Gründe einzelner Absagen.'),
+                        DatePicker::make('decided_on')
+                            ->label('Beschlossen am')
+                            ->requiredWith('scored_on_decision'),
+                        Select::make('announcement_id')
+                            ->relationship('announcement', 'title', fn ($query) => $query->orderByDesc('created_at'))
+                            ->searchable()
+                            ->preload()
+                            ->label('Meldung')
+                            ->helperText('Optional. Die öffentliche Meldung zum Beschluss, auf die das Turnier '
+                                . 'verlinkt, solange sie unter „Meldungen“ steht.'),
+                        // A warning, not an error: the decision may well stand without it, but the
+                        // number it rests on is then nowhere to be seen.
+                        Callout::make('Der Beleg fehlt')
+                            ->description('Es ist eine Begründung eingetragen, aber keine Zahl unter „Gemeldet“. '
+                                . 'Ohne sie lässt sich öffentlich nicht nachvollziehen, wie viele gemeldet waren.')
+                            ->warning()
+                            ->visible(fn (Get $get) => filled($get('scored_on_decision')) && blank($get('registered_count'))),
+                    ])
+                    ->collapsible()
+                    ->columnSpanFull(),
             ]);
     }
 }

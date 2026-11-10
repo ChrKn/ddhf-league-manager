@@ -281,4 +281,62 @@ class SeasonThresholdTest extends TestCase
         $this->assertSame(3, $this->tournament($season, 22, ['registered_count' => 25])->noShows());
         $this->assertNull($this->tournament($season, 22)->noShows());
     }
+
+    public function test_a_decision_scores_the_field_in_the_column_of_those_who_fenced(): void
+    {
+        // Der Anlassfall mit Beschluss: gewertet, und zwar im Band 17-24 der Standard-Matrix -
+        // nicht in dem für 25, auch wenn 25 gemeldet waren.
+        $season = $this->season(25);
+        $tournament = $this->tournament($season, 22, [
+            'registered_count'   => 25,
+            'scored_on_decision' => 'Drei krankheitsbedingte Absagen nach Meldeschluss; Präsidium hat zugestimmt.',
+            'decided_on'         => '2026-11-01',
+        ]);
+
+        $band = $this->evaluator($this->standard);
+        $scoring = SeasonScoring::of($season);
+
+        $this->assertTrue($scoring->scores($tournament));
+        $this->assertTrue($scoring->scoresOnlyByDecision($tournament));
+        $this->assertSame(
+            [$band->pointsFor(22, '1'), $band->pointsFor(22, '2'), $band->pointsFor(22, '3')],
+            $this->points($season),
+        );
+        $this->assertNotSame($band->pointsFor(25, '1'), $band->pointsFor(22, '1'));
+        $this->assertCount(1, SeasonRanking::steps($this->loaded($season)));
+    }
+
+    public function test_a_decision_does_not_lift_the_floor_of_the_matrix(): void
+    {
+        // Unter 5 vergibt die Matrix nichts. Ein Beschluss macht daraus keine Punkte.
+        $season = $this->season(25);
+        $tournament = $this->tournament($season, 3, [
+            'scored_on_decision' => 'Beschluss',
+            'decided_on'         => '2026-11-01',
+        ]);
+
+        $scoring = SeasonScoring::of($season);
+
+        $this->assertFalse($scoring->scores($tournament));
+        $this->assertFalse($scoring->scoresOnlyByDecision($tournament));
+        $this->assertSame([0, 0, 0], $this->points($season));
+        $this->assertSame([], SeasonRanking::steps($this->loaded($season)));
+    }
+
+    public function test_a_decision_above_the_threshold_decides_nothing(): void
+    {
+        $season = $this->season(25);
+        $tournament = $this->tournament($season, 30, ['scored_on_decision' => 'vorsorglich', 'decided_on' => '2026-11-01']);
+
+        $this->assertTrue(SeasonScoring::of($season)->scores($tournament));
+        $this->assertFalse(SeasonScoring::of($season)->scoresOnlyByDecision($tournament));
+    }
+
+    public function test_an_empty_string_is_no_decision(): void
+    {
+        $season = $this->season(25);
+        $tournament = $this->tournament($season, 22, ['scored_on_decision' => '']);
+
+        $this->assertFalse(SeasonScoring::of($season)->scores($tournament));
+    }
 }

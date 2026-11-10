@@ -39,7 +39,8 @@ class SeasonForm
                     ->label('Gewertet ab Teilnehmenden')
                     ->helperText('Leer = Schwelle ergibt sich aus der Matrix. Ausgefüllt wird ein '
                         . 'Turnier mit weniger Angetretenen nicht gewertet, auch wenn der '
-                        . 'Punkteschlüssel eine Spalte dafür hat — etwa 25 für Langschwert offen.'),
+                        . 'Punkteschlüssel eine Spalte dafür hat — etwa 25 für Langschwert offen. '
+                        . 'Ausgenommen ist ein Turnier mit „Wertung auf Beschluss“.'),
                 TextInput::make('year')
                     ->required()
                     ->label('Jahr'),

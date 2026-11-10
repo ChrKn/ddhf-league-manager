@@ -247,12 +247,26 @@ Empty means the season has no rule of its own and the matrix alone decides, whic
 season stood before 1.8.0. A tournament is scored when
 
 ```
-(N ≥ min_participants  OR  min_participants is empty)
+(N ≥ min_participants  OR  min_participants is empty  OR  the tournament is scored on decision)
 AND  the matrix has a column for N that awards something
 ```
 
 The second half is the matrix's own floor - most tables end in a band of zeros below 5 - and nothing
 lifts it.
+
+**Scored on decision.** The federation can decide to score a tournament that fell short of the
+season's threshold - 22 fenced, 25 had registered, three cancelled after registration closed. That
+is a record on the tournament, not a correction made on the side: `tournaments.scored_on_decision`
+holds the grounds (like `results.counted_on_request`, a text rather than a switch, so a decision
+always says why), `decided_on` the day, which the panel requires once there are grounds, and
+`announcement_id` optionally the announcement that made it public. The decision lifts the season's
+threshold and nothing else. The points are still the season's matrix, at the field that fenced (22,
+never the 25 registered), and there is no matrix of its own on a tournament. A decision cannot turn
+a field below the matrix's floor into points either. The site shows the decision on the tournament,
+with its date and grounds, and marks the tournament in the standing.
+
+The rule the federation decides by (how many cancellations, who may decide, that it applies to every
+tournament meeting it) is the federation's and not in the code.
 
 **N is who fenced.** `tournaments.participant_count` counts everybody who fenced at least one bout.
 Somebody who cancelled before their first bout is not in it, whatever the registration list says.

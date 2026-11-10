@@ -15,6 +15,11 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   neither the points nor the field size.
 - Import: rows for people who registered and never fenced ("nicht angetreten", "n.a.", "DNS" …)
   are skipped, not counted towards the field, and reported as a proposal for "Gemeldet".
+- Scored on decision: a tournament below the season's threshold can be scored on a decision of
+  the federation (`scored_on_decision` with the grounds, `decided_on`, optionally the
+  announcement). It lifts the season's threshold only: points come from the season's matrix at
+  the field that fenced, and the matrix's own floor stays. Section "Wertung auf Beschluss" in the
+  tournament form, with a warning where the registrations are missing.
 
 ### Changed
 - Whether a tournament is scored is decided in one place, `SeasonScoring`, for the standing, its

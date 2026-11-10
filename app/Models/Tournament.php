@@ -29,6 +29,11 @@ class Tournament extends Model
         // How many had registered when registration closed. Evidence for a decision, shown next
         // to the field, and never part of a point.
         'registered_count',
+        // The federation's decision to score it below the season's threshold: the grounds, the
+        // day, and where it was announced. See isScoredOnDecision().
+        'scored_on_decision',
+        'decided_on',
+        'announcement_id',
         'event_id',
         'season_id',
         'ruleset_id',
@@ -45,7 +50,21 @@ class Tournament extends Model
         'end_date'          => 'date',
         'participant_count' => 'integer',
         'registered_count'  => 'integer',
+        'decided_on'        => 'date',
     ];
+
+    /**
+     * Whether the federation decided to score this tournament although its field is below the
+     * season's threshold.
+     *
+     * The column holds the grounds rather than a yes, like the Kulanzregelung on a result, so a
+     * decision always says why it was made. It lifts the season's threshold and nothing else -
+     * the points are the season's matrix at the field that fenced. See SeasonScoring.
+     */
+    public function isScoredOnDecision(): bool
+    {
+        return filled($this->scored_on_decision);
+    }
 
     /**
      * How many registered and never fenced, where the registrations are on record.
@@ -159,6 +178,12 @@ class Tournament extends Model
                 return ['tournament_format_id' => $id];
             },
         );
+    }
+
+    /** Where the decision to score it was made public, if anywhere. */
+    public function announcement(): BelongsTo
+    {
+        return $this->belongsTo(Announcement::class);
     }
 
     public function results(): HasMany

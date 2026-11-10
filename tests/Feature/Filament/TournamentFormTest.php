@@ -122,4 +122,71 @@ class TournamentFormTest extends TestCase
             array_values(TournamentFormat::options()),
         );
     }
+
+    public function test_a_decision_without_its_date_is_refused(): void
+    {
+        Livewire::test(CreateTournament::class)
+            ->fillForm([
+                'event_id'           => $this->event->id,
+                'season_id'          => $this->season->id,
+                'participant_count'  => 22,
+                'registered_count'   => 25,
+                'scored_on_decision' => 'Drei Absagen nach Meldeschluss, Präsidium hat zugestimmt.',
+            ])
+            ->call('create')
+            ->assertHasFormErrors(['decided_on' => 'required_with']);
+
+        $this->assertSame(0, Tournament::count());
+    }
+
+    public function test_a_decision_with_its_date_is_saved(): void
+    {
+        Livewire::test(CreateTournament::class)
+            ->fillForm([
+                'event_id'           => $this->event->id,
+                'season_id'          => $this->season->id,
+                'participant_count'  => 22,
+                'registered_count'   => 25,
+                'scored_on_decision' => 'Drei Absagen nach Meldeschluss, Präsidium hat zugestimmt.',
+                'decided_on'         => '2026-11-01',
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $tournament = Tournament::sole();
+
+        $this->assertTrue($tournament->isScoredOnDecision());
+        $this->assertSame('2026-11-01', $tournament->decided_on->toDateString());
+        $this->assertSame(25, $tournament->registered_count);
+    }
+
+    public function test_a_decision_without_the_registrations_is_warned_about_not_refused(): void
+    {
+        Livewire::test(CreateTournament::class)
+            ->fillForm([
+                'event_id'           => $this->event->id,
+                'season_id'          => $this->season->id,
+                'participant_count'  => 22,
+                'scored_on_decision' => 'Beschluss',
+                'decided_on'         => '2026-11-01',
+            ])
+            ->assertSee('Der Beleg fehlt')
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(1, Tournament::count());
+    }
+
+    public function test_fewer_registrations_than_fencers_are_refused(): void
+    {
+        Livewire::test(CreateTournament::class)
+            ->fillForm([
+                'event_id'          => $this->event->id,
+                'season_id'         => $this->season->id,
+                'participant_count' => 22,
+                'registered_count'  => 20,
+            ])
+            ->call('create')
+            ->assertHasFormErrors(['registered_count']);
+    }
 }
