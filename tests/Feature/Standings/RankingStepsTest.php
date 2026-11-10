@@ -132,9 +132,9 @@ class RankingStepsTest extends TestCase
     {
         $evaluator = ScoringMatrixEvaluator::fromJson(ScoringMatrix::first()->matrix);
 
-        $this->assertFalse($evaluator->scores(3));
-        $this->assertTrue($evaluator->scores(4));
-        $this->assertTrue($evaluator->scores(40));
+        $this->assertFalse($evaluator->hasBandFor(3));
+        $this->assertTrue($evaluator->hasBandFor(4));
+        $this->assertTrue($evaluator->hasBandFor(40));
     }
 
     public function test_one_step_per_event_oldest_first_and_cumulative(): void

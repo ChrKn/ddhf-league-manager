@@ -67,7 +67,12 @@
         <h2 class="used-in">{{ __('site.scoring.used_in') }}</h2>
         <ul class="used-in">
             @foreach ($seasons as $season)
-                <li><a href="{{ $season['href'] }}">{{ $season['name'] }}</a></li>
+                <li>
+                    <a href="{{ $season['href'] }}">{{ $season['name'] }}</a>
+                    @if ($season['threshold'])
+                        <span class="threshold">· {{ $season['threshold'] }}</span>
+                    @endif
+                </li>
             @endforeach
         </ul>
     @endif

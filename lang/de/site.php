@@ -84,6 +84,8 @@ return [
         'same'             => 'unverändert',
         'new'              => 'neu',
         'new_long'         => 'neu in der Rangliste',
+        'threshold'        => 'Gewertet ab',
+        'threshold_value'  => ':count Angetretenen (Saisonregel)',
     ],
 
     'scoring' => [
@@ -95,6 +97,7 @@ return [
         'from'         => 'ab :n',
         'up_to'        => 'bis :n',
         'threshold'    => 'Unter :count Teilnehmenden gibt es keine Punkte.',
+        'own_threshold' => 'gewertet ab :count Angetretenen (Saisonregel)',
         'zero'         => '· = 0 Punkte',
         'empty'        => 'Für diese Punktevergabe ist keine Tabelle hinterlegt.',
     ],

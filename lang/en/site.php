@@ -88,6 +88,8 @@ return [
         'same'             => 'unchanged',
         'new'              => 'new',
         'new_long'         => 'new in this standing',
+        'threshold'        => 'Scored from',
+        'threshold_value'  => ':count participants (season rule)',
     ],
 
     'scoring' => [
@@ -99,6 +101,7 @@ return [
         'from'         => ':n+',
         'up_to'        => 'up to :n',
         'threshold'    => 'Below :count participants, nobody earns points.',
+        'own_threshold' => 'scored from :count participants (season rule)',
         'zero'         => '· = 0 points',
         'empty'        => 'No table has been entered for this scoring.',
     ],

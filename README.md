@@ -233,6 +233,27 @@ should look like an exception. It is a free text field and not a switch, so a gr
 never stand there without saying who granted it. Set it in the panel on the result, or filter for
 the ones that carry it.
 
+## How a tournament is scored
+
+Points are never stored. Every page, the API and the data browser work them out from three things:
+the placement, the size of the field, and the season's points table (`seasons.scoring_matrix_id`).
+Whether a tournament counts **at all** is decided in one place, `App\Standings\SeasonScoring`, and
+everything that shows a standing, a step through it or a tournament's points asks there.
+
+**The threshold belongs to the season, not to the table.** The official DDHF table is one table; its
+columns for 5, 9 and 17 entrants carry the remark "gilt nur für nicht offen Langschwert". So
+`seasons.min_participants` holds the smallest field a season scores, and the matrix stays the table.
+Empty means the season has no rule of its own and the matrix alone decides, which is how every
+season stood before 1.8.0. A tournament is scored when
+
+```
+(N ≥ min_participants  OR  min_participants is empty)
+AND  the matrix has a column for N that awards something
+```
+
+The second half is the matrix's own floor - most tables end in a band of zeros below 5 - and nothing
+lifts it.
+
 ## Running the Project Locally
 
 ### Requirements

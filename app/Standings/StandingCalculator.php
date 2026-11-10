@@ -115,12 +115,14 @@ final class StandingCalculator
         // offered one.
         [$undecided, $chosen] = $this->divisionChoice($season);
 
+        // Whether a tournament counts is the season's question as much as the matrix's - see
+        // SeasonScoring, which every other reader of a tournament asks as well.
+        $scoring = SeasonScoring::for($season, $this->evaluator);
+
         foreach ($season->tournaments as $tournament) {
             if ($only !== null && !isset($only[$tournament->id])) {
                 continue;
             }
-
-            $participant_count = $tournament->participant_count ?? 0;
 
             foreach ($tournament->results as $result) {
                 // Someone who asked to be removed stays in the standing, at the place they fenced
@@ -175,7 +177,7 @@ final class StandingCalculator
                     tournament_public_id: $tournament->public_id,
                     tournament_name: $tournament->name ?: $tournament->display_name ?: '',
                     placement: (string) $result->placement,
-                    points: $this->evaluator->pointsFor($participant_count, (string) $result->placement),
+                    points: $scoring->pointsFor($tournament, (string) $result->placement),
                     region: $tournament->region,
                     ruleset_id: $tournament->ruleset_id,
                     ruleset_name: $tournament->ruleset?->name,

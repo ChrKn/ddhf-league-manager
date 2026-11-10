@@ -23,8 +23,9 @@ final class TournamentResults
      */
     public static function for(Tournament $tournament): array
     {
-        $evaluator = SeasonRanking::evaluatorFor($tournament->season?->scoring_matrix);
-        $participants = (int) $tournament->participant_count;
+        // Through SeasonScoring, which the standing asks as well: a tournament below the season's
+        // threshold shows nobody points here that the table does not give them.
+        $scoring = SeasonScoring::of($tournament->season);
 
         // Ordered the way a result list reads: the ranks, then the rounds from the latest to the
         // earliest, then whoever never left the pools. Through Placement, because sorted as text
@@ -34,7 +35,7 @@ final class TournamentResults
                 Placement::from((string) $result->placement)->sortKey(),
                 $result->fencer?->display_name ?? '',
             ])
-            ->map(function ($result) use ($evaluator, $participants) {
+            ->map(function ($result) use ($scoring, $tournament) {
                 $anonymized = (bool) $result->fencer?->isAnonymized();
 
                 return [
@@ -45,7 +46,7 @@ final class TournamentResults
                     // entry or a club that asked not to be shown. The raw spelling from the
                     // source file stays out of this site either way.
                     'group'      => $anonymized ? null : $result->group?->public_name,
-                    'points'     => $evaluator?->pointsFor($participants, (string) $result->placement),
+                    'points'     => $scoring?->pointsFor($tournament, (string) $result->placement),
                 ];
             })
             ->values()

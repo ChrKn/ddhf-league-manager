@@ -191,6 +191,11 @@ class SiteController extends Controller
             'facts'   => array_filter([
                 __('site.standing.season')  => $season->year,
                 __('site.standing.scoring') => $ranking['mode']?->label(),
+                // Only where the season sets one. Otherwise the threshold is the matrix's, and the
+                // page the scheme links to already says it.
+                __('site.standing.threshold') => $season->hasOwnThreshold()
+                    ? __('site.standing.threshold_value', ['count' => $season->min_participants])
+                    : null,
             ], fn ($value) => $value !== null && $value !== ''),
             'scoring' => $matrix ? [
                 'name' => $matrix->name,
@@ -349,9 +354,14 @@ class SiteController extends Controller
             'pools'     => $table['pools'],
             'threshold' => $table['threshold'],
             'max'       => max(1, $table['max']),
+            // A season may score from a larger field than the table starts at. The table stays the
+            // table; the rule is said next to the standing it belongs to.
             'seasons'   => $seasons->map(fn (Season $season) => [
-                'name' => $season->display_name,
-                'href' => SiteUrl::to('standing', $season->public_id),
+                'name'      => $season->display_name,
+                'href'      => SiteUrl::to('standing', $season->public_id),
+                'threshold' => $season->hasOwnThreshold()
+                    ? __('site.scoring.own_threshold', ['count' => $season->min_participants])
+                    : null,
             ])->all(),
         ]);
     }

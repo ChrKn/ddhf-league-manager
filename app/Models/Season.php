@@ -23,6 +23,7 @@ class Season extends Model
         'standing_id',
         'scoring_matrix_id',
         'scoring_mode',
+        'min_participants',
         'year',
         'division_choice_required',
         'is_public',
@@ -32,6 +33,7 @@ class Season extends Model
     {
         return [
             'scoring_mode'             => ScoringMode::class,
+            'min_participants'         => 'integer',
             'division_choice_required' => 'boolean',
             'is_public'                => 'boolean',
         ];
@@ -47,6 +49,18 @@ class Season extends Model
     public function isPublic(): bool
     {
         return (bool) $this->is_public;
+    }
+
+    /**
+     * The smallest field this season scores, where it sets one of its own.
+     *
+     * Null for most seasons: the threshold is then wherever the matrix starts awarding points.
+     * Set where the season's rule differs from the table it uses - open longsword is scored from
+     * 25 entrants on the same table that scores every other standing from 5. See SeasonScoring.
+     */
+    public function hasOwnThreshold(): bool
+    {
+        return $this->min_participants !== null;
     }
 
     public function scopePublic(Builder $query): Builder

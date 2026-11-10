@@ -30,6 +30,16 @@ class SeasonForm
                     ->required()
                     ->helperText('Zonen- und Regelwerksystem verwerfen Turniere ohne Zone bzw. ohne Regelwerk.')
                     ->label('Auswertungssystem'),
+                // The season's own threshold, kept apart from the matrix: the official table is one
+                // table, and "gilt nur für nicht offen Langschwert" is a rule about the standing.
+                TextInput::make('min_participants')
+                    ->integer()
+                    ->minValue(1)
+                    ->nullable()
+                    ->label('Gewertet ab Teilnehmenden')
+                    ->helperText('Leer = Schwelle ergibt sich aus der Matrix. Ausgefüllt wird ein '
+                        . 'Turnier mit weniger Angetretenen nicht gewertet, auch wenn der '
+                        . 'Punkteschlüssel eine Spalte dafür hat — etwa 25 für Langschwert offen.'),
                 TextInput::make('year')
                     ->required()
                     ->label('Jahr'),

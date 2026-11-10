@@ -4,6 +4,21 @@ Notable changes to the DDHF standings system.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).  
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.8.0 - 2026-11-10
+
+### Added
+- A season can set its own threshold (`seasons.min_participants`, "Gewertet ab Teilnehmenden" in
+  the panel), kept apart from its scoring matrix. Empty keeps the threshold the matrix implies, so
+  no season changes. Shown in the standing's info panel and next to the season on the matrix page.
+
+### Changed
+- Whether a tournament is scored is decided in one place, `SeasonScoring`, for the standing, its
+  steps, the tournament pages, their JSON and the data browser alike.
+
+### Fixed
+- A band of zeros at the bottom of a matrix no longer counts as a column: a field below the
+  threshold of a matrix that has one is no longer listed as a step of the standing.
+
 ## 1.7.0 - 2026-11-09
 
 ### Added

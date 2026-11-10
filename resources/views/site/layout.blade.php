@@ -471,6 +471,7 @@
 
         h2.used-in { margin-top: 2rem; font-size: .74rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
         ul.used-in { margin: .5rem 0 0; padding-left: 1.1rem; font-size: .92rem; columns: 2 16rem; }
+        ul.used-in .threshold { color: var(--muted); }
 
         .note {
             background: var(--accent-soft);

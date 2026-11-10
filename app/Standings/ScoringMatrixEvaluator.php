@@ -67,14 +67,23 @@ final class ScoringMatrixEvaluator
     }
 
     /**
-     * Whether a tournament of this size counts at all.
+     * Whether the table has a column for a field of this size that awards anything at all.
      *
-     * A field smaller than the smallest threshold in the matrix earns nobody anything: the
-     * tournament is fenced and recorded, but not scored.
+     * Only what the matrix says. Whether a tournament is scored is a question about the season as
+     * well - it may set a threshold of its own, and a tournament may be scored on a decision of the
+     * federation - and that is answered in SeasonScoring, which every reader goes through. This is
+     * the half of it no decision can lift: a field below the table's first real column earns
+     * nobody anything, because there is no column to read the points from.
+     *
+     * A band of zeros counts as no band. Most matrices end in one ("unter 5 gibt es nichts"), and
+     * finding it is not the same as finding points - asked the other way, a field of three would
+     * count as scored and turn up as a step in a standing nobody's points moved in.
      */
-    public function scores(int $participant_count): bool
+    public function hasBandFor(int $participant_count): bool
     {
-        return $this->ruleFor($participant_count) !== null;
+        $rule = $this->ruleFor($participant_count);
+
+        return $rule !== null && !self::awardsNothing($rule);
     }
 
     /**

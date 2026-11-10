@@ -80,10 +80,11 @@ final class SeasonRanking
      * before the importer existed, and the date that matters to a reader is the day it was fenced,
      * not the day somebody uploaded it.
      *
-     * An event only becomes a step if at least one of its tournaments in this season was scored.
-     * One whose field was too small for the points table changed nobody's points, and a step that
-     * moves nothing would only make the list longer. Its tournaments are still part of every step
-     * from then on - otherwise the last step would not be the table as it stands now.
+     * An event only becomes a step if at least one of its tournaments in this season was scored -
+     * asked of SeasonScoring, like the table itself does, so the two cannot disagree. One whose
+     * field was too small changed nobody's points, and a step that moves nothing would only make
+     * the list longer. Its tournaments are still part of every step from then on - otherwise the
+     * last step would not be the table as it stands now.
      *
      * Oldest first. Tournaments with no date at all go last, where they are in the current table
      * either way.
@@ -92,9 +93,9 @@ final class SeasonRanking
      */
     public static function steps(Season $season): array
     {
-        $evaluator = self::evaluatorFor($season->scoring_matrix);
+        $scoring = SeasonScoring::of($season);
 
-        if ($evaluator === null) {
+        if ($scoring === null) {
             return [];
         }
 
@@ -126,7 +127,7 @@ final class SeasonRanking
 
             $scored = array_filter(
                 $group,
-                fn (Tournament $tournament) => $evaluator->scores((int) $tournament->participant_count)
+                fn (Tournament $tournament) => $scoring->scores($tournament)
             );
 
             if ($scored === []) {

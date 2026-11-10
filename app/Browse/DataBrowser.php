@@ -28,6 +28,7 @@ use App\Models\Tournament;
 use App\Models\TournamentFormat;
 use App\Standings\Placement;
 use App\Standings\SeasonRanking;
+use App\Standings\SeasonScoring;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -464,8 +465,7 @@ class DataBrowser
 
         // Points are never stored, so they have to be derived here exactly as the standings
         // derive them - otherwise this page would be checking itself rather than the data.
-        $evaluator = SeasonRanking::evaluatorFor($tournament->season?->scoring_matrix);
-        $participants = (int) $tournament->participant_count;
+        $scoring = SeasonScoring::of($tournament->season);
 
         // Ordered the way the points table reads, left to right: the ranks, then the rounds from
         // the latest to the earliest, then whoever never left the pools. Sorted through Placement,
@@ -481,7 +481,7 @@ class DataBrowser
                 'group'             => $result->group?->name,
                 'fencer_group_name' => $result->fencer_group_name,
                 'federation'        => $result->federation?->name,
-                'points'            => $evaluator?->pointsFor($participants, (string) $result->placement),
+                'points'            => $scoring?->pointsFor($tournament, (string) $result->placement),
             ])
             ->values()
             ->all();
