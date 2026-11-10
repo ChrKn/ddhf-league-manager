@@ -38,7 +38,20 @@ class TournamentForm
                     ->required()
                     ->integer()
                     ->minValue(1)
-                    ->label('Teilnehmende'),
+                    ->label('Teilnehmende (angetreten)')
+                    ->helperText('Wer mindestens ein Gefecht ausgetragen hat. Wer vor dem ersten Gefecht '
+                        . 'abgesagt hat, zählt nicht. Nach dieser Zahl richten sich die Punkte.'),
+                // Evidence, and nothing else: no point is ever read at this number. See
+                // SeasonScoring::pointsFor().
+                TextInput::make('registered_count')
+                    ->integer()
+                    ->minValue(0)
+                    ->nullable()
+                    ->gte('participant_count')
+                    ->label('Gemeldet')
+                    ->helperText('Optional. Zahl der Meldungen zum Meldeschluss. Fließt nie in die Punkte '
+                        . 'ein, wird öffentlich als „25 gemeldet · 22 angetreten“ angezeigt. Keine Namen '
+                        . 'und keine Gründe für Absagen eintragen.'),
                 DatePicker::make('start_date')
                     ->label('Gefochten am')
                     ->hint('Optional. Leer lassen, wenn das Datum der Veranstaltung gilt.')

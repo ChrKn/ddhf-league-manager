@@ -68,7 +68,13 @@ final class SeasonScoring
             || (int) $tournament->participant_count >= $this->min_participants;
     }
 
-    /** What one placement in this tournament is worth - nothing at all where it is not scored. */
+    /**
+     * What one placement in this tournament is worth - nothing at all where it is not scored.
+     *
+     * By participant_count only, which is the field that fenced. How many had registered is on the
+     * tournament as well and deliberately read nowhere on the way to a point: a field size that a
+     * longer registration list could raise would be one worth raising.
+     */
     public function pointsFor(Tournament $tournament, string $placement): int
     {
         if (!$this->scores($tournament)) {

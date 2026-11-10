@@ -22,7 +22,13 @@ class Tournament extends Model
     protected $fillable = [
         'public_id',
         'name',
+        // The field: everybody who fenced at least one bout. Somebody who cancelled before their
+        // first bout is not in it, whatever the registration list says. This is the N every point
+        // is read at - see SeasonScoring.
         'participant_count',
+        // How many had registered when registration closed. Evidence for a decision, shown next
+        // to the field, and never part of a point.
+        'registered_count',
         'event_id',
         'season_id',
         'ruleset_id',
@@ -35,9 +41,26 @@ class Tournament extends Model
     ];
 
     protected $casts = [
-        'start_date' => 'date',
-        'end_date'   => 'date',
+        'start_date'        => 'date',
+        'end_date'          => 'date',
+        'participant_count' => 'integer',
+        'registered_count'  => 'integer',
     ];
+
+    /**
+     * How many registered and never fenced, where the registrations are on record.
+     *
+     * Only ever a number. Who they were is not kept - there is no result for them, so there is no
+     * name - and why is not kept either: the reason is usually illness, which is health data.
+     */
+    public function noShows(): ?int
+    {
+        if ($this->registered_count === null || $this->participant_count === null) {
+            return null;
+        }
+
+        return max(0, $this->registered_count - $this->participant_count);
+    }
 
     /**
      * Whether this tournament says when it was fenced, rather than leaving it to the event.

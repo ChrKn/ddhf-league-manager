@@ -8,6 +8,7 @@ use App\Standings\Placement;
 use Closure;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 
 class ResultForm
@@ -41,6 +42,13 @@ class ResultForm
                     ->dehydrateStateUsing(fn ($state) => Placement::describes((string) $state)
                         ? (string) Placement::fromSource((string) $state)
                         : $state),
+                // Shown as "Aufgabe" next to the placement, and that is all it does.
+                Toggle::make('withdrew')
+                    ->label('Aufgabe')
+                    ->helperText('Angetreten und dann aufgegeben, etwa verletzt. Die Platzierung ist '
+                        . 'die, auf der die Person ausgeschieden ist; sie zählt zu den Teilnehmenden '
+                        . 'und bekommt Punkte wie alle anderen. Wer gar nicht angetreten ist, bekommt '
+                        . 'kein Ergebnis.'),
                 TextInput::make('fencer_group_name')
                     ->disabled()
                     ->placeholder('Automatisch generiert')

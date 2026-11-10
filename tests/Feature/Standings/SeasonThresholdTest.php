@@ -234,4 +234,51 @@ class SeasonThresholdTest extends TestCase
             ->assertOk()
             ->assertDontSee('Gewertet ab');
     }
+
+    public function test_the_registrations_never_move_a_point(): void
+    {
+        // Gemeldet ist ein Beleg, keine Feldgröße. Auch nicht, wenn die Zahl über der Schwelle
+        // liegt oder in eine größere Spalte führen würde.
+        $short = $this->season(25);
+        $this->tournament($short, 22, ['registered_count' => 25]);
+
+        $this->assertSame([0, 0, 0], $this->points($short));
+
+        $open = $this->season(null);
+        $this->tournament($open, 22, ['registered_count' => 40]);
+        $band = $this->evaluator($this->standard);
+
+        $this->assertSame(
+            [$band->pointsFor(22, '1'), $band->pointsFor(22, '2'), $band->pointsFor(22, '3')],
+            $this->points($open),
+        );
+        $this->assertNotSame($band->pointsFor(40, '1'), $band->pointsFor(22, '1'));
+
+        // Und unter der Untergrenze der Matrix bleibt es bei nichts.
+        $tiny = $this->season(null);
+        $this->tournament($tiny, 4, ['registered_count' => 30]);
+
+        $this->assertSame([0, 0, 0], $this->points($tiny));
+    }
+
+    public function test_giving_up_changes_neither_the_points_nor_the_field(): void
+    {
+        $season = $this->season(null);
+        $tournament = $this->tournament($season, 22);
+        $before = $this->points($season);
+
+        $tournament->results()->where('placement', '2')->update(['withdrew' => true]);
+
+        $this->assertSame($before, $this->points($season));
+        $this->assertSame(22, $tournament->fresh()->participant_count);
+        $this->assertTrue($tournament->results()->where('placement', '2')->sole()->withdrew());
+    }
+
+    public function test_the_no_shows_are_a_difference_and_nothing_more(): void
+    {
+        $season = $this->season(25);
+
+        $this->assertSame(3, $this->tournament($season, 22, ['registered_count' => 25])->noShows());
+        $this->assertNull($this->tournament($season, 22)->noShows());
+    }
 }

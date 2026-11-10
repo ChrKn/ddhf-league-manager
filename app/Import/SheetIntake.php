@@ -80,7 +80,9 @@ final class SheetIntake
                     // The proposal, and the decision until somebody makes another one.
                     'participants'        => $sheet->participants,
                     'stated_participants' => $sheet->participants,
-                    'row_count'           => count($sheet->rows),
+                    // The results the field size is checked against, which leaves out whoever
+                    // registered and never fenced. See NoShow.
+                    'row_count'           => count($sheet->rows) - NoShow::count($sheet->rows),
                     'notes'               => $sheet->notes,
                 ];
             }

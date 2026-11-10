@@ -254,6 +254,29 @@ AND  the matrix has a column for N that awards something
 The second half is the matrix's own floor - most tables end in a band of zeros below 5 - and nothing
 lifts it.
 
+**N is who fenced.** `tournaments.participant_count` counts everybody who fenced at least one bout.
+Somebody who cancelled before their first bout is not in it, whatever the registration list says.
+Three kinds of somebody on a start list are told apart:
+
+| Who                          | Result                                               | In N |
+|------------------------------|------------------------------------------------------|------|
+| fenced to the end            | yes                                                  | yes  |
+| fenced and gave up (injured) | yes, at the place they went out on, marked "Aufgabe" | yes  |
+| registered, never fenced     | none - no name, no reason                            | no   |
+
+`results.withdrew` is only the "Aufgabe" on the list; it changes neither points nor N.
+`tournaments.registered_count` is how many had registered when registration closed. It is evidence
+for a decision and shown as "25 gemeldet · 22 angetreten"; **no point is ever read at it**, because a
+number a longer registration list could raise would be worth raising. The ones who did not fence are
+only ever the difference between the two. Their reason is not recorded anywhere: it is usually
+illness, which is health data.
+
+The import recognises rows for no-shows that organisers sometimes send along ("nicht angetreten",
+"n.a.", "DNS", "abgemeldet" …, see `App\Import\NoShow`). They are planned as skipped, left out of the
+rows the field size is checked against, and their number is mentioned as a proposal for "Gemeldet",
+which the import never writes. "Aufgabe" or "Verletzung" is not a no-show; that row is left to the
+reviewer, who enters the place they went out on.
+
 ## Running the Project Locally
 
 ### Requirements

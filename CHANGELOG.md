@@ -10,6 +10,11 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - A season can set its own threshold (`seasons.min_participants`, "Gewertet ab Teilnehmenden" in
   the panel), kept apart from its scoring matrix. Empty keeps the threshold the matrix implies, so
   no season changes. Shown in the standing's info panel and next to the season on the matrix page.
+- Tournaments record how many had registered (`registered_count`, "Gemeldet"), as evidence only:
+  it never enters a point. Results can be marked as given up (`withdrew`, "Aufgabe"), which changes
+  neither the points nor the field size.
+- Import: rows for people who registered and never fenced ("nicht angetreten", "n.a.", "DNS" …)
+  are skipped, not counted towards the field, and reported as a proposal for "Gemeldet".
 
 ### Changed
 - Whether a tournament is scored is decided in one place, `SeasonScoring`, for the standing, its

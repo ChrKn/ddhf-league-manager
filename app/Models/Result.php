@@ -15,7 +15,15 @@ class Result extends Model
         'counted_on_request',
         'fencer_group_name',
         'placement',
+        'withdrew',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'withdrew' => 'boolean',
+        ];
+    }
 
     public function tournament(): BelongsTo
     {
@@ -40,6 +48,17 @@ class Result extends Model
     public function federation(): BelongsTo
     {
         return $this->belongsTo(Federation::class);
+    }
+
+    /**
+     * Whether this person fenced and then gave up - injured, or stopped.
+     *
+     * For the list only. They fenced, so they are part of the field, and the placement is the one
+     * they went out on and scores like any other. Somebody who never fenced has no result at all.
+     */
+    public function withdrew(): bool
+    {
+        return (bool) $this->withdrew;
     }
 
     /**

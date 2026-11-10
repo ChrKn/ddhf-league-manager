@@ -133,7 +133,21 @@ class ImportPlanner
         foreach ($tournaments as $sheet => $tournament) {
             $ofSheet = array_filter($rows, fn ($row) => $row['sheet'] === $sheet);
             $stated = array_unique(array_column($ofSheet, 'participants'));
-            $counted = count($ofSheet);
+            // Somebody who registered and never fenced is a row of the file and no part of the
+            // field. Counted, those rows would ask for a field size that includes them - see NoShow.
+            $absent = NoShow::count($ofSheet);
+            $counted = count($ofSheet) - $absent;
+
+            if ($absent > 0) {
+                $notes[] = sprintf(
+                    '"%s": %d Zeile(n) als nicht angetreten markiert. Sie werden nicht übernommen und '
+                    . 'zählen nicht zu den Teilnehmenden. Zusammen mit den Angetretenen ergibt das %d '
+                    . 'Meldungen - ein Vorschlag für „Gemeldet“ am Turnier, nicht mehr.',
+                    $sheet,
+                    $absent,
+                    count($ofSheet),
+                );
+            }
 
             if (!$tournament && ($sizes[$sheet] ?? null) !== null) {
                 $decided = (int) $sizes[$sheet];
@@ -251,11 +265,15 @@ class ImportPlanner
             // not written either; see ImportWriter.
             $anonymous = NameMatcher::normalize($row['name']) === NameMatcher::normalize(Fencer::ANONYMOUS_NAME);
 
+            // Never fenced, so never a result - and not a question for the reviewer either.
+            $absent = NoShow::marks($row['placement']);
+
             // Otherwise: what the matcher believes, filled in. Confirming a filled row is quick;
             // filling one in per result is not, and a field of forty is forty answers to the same
             // question. What the belief is worth stays next to it - the confidence and the score
             // are on the row, and the guesses are counted again before anything is written.
             $intent = match (true) {
+                $absent          => 'skip',
                 !$readable       => '',
                 $anonymous       => 'create',
                 $duplicate       => 'skip',
@@ -266,7 +284,7 @@ class ImportPlanner
 
             $out[] = [
                 'aktion'            => $intent,
-                'anonymisieren'     => $anonymous ? '1' : '',
+                'anonymisieren'     => $anonymous && !$absent ? '1' : '',
                 'datei'             => $row['sheet'],
                 // Empty where the tournament is still to be created. The panel fills it in at the
                 // moment of writing, when the record exists; a console run always has one.
@@ -288,6 +306,7 @@ class ImportPlanner
                 'verein_guete'      => $group->confidence->label(),
                 'verein_wert'       => $group->found() ? sprintf('%.2f', $group->score) : '',
                 'hinweis'           => match (true) {
+                    $absent    => 'Nicht angetreten — kein Ergebnis, zählt nicht zu den Teilnehmenden',
                     $anonymous => 'Von den Veranstaltenden anonymisiert — wird ohne Namen und Verein angelegt',
                     $duplicate => 'Ergebnis in diesem Turnier existiert bereits',
                     $doubtful  => 'Nur ein ungefährer Treffer — bitte ansehen',
