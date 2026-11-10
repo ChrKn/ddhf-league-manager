@@ -115,6 +115,9 @@
                                             ])>
                                                 <td>
                                                     <a href="{{ $url('tournament', $result['tournament_id']) }}">{{ $result['tournament'] }}</a>
+                                                    @if ($result['on_decision'] ?? false)
+                                                        @include('site.partials.decision-mark')
+                                                    @endif
                                                 </td>
                                                 {{-- Not placement_name, which is the German one the
                                                      data browser and the API read. The stored value

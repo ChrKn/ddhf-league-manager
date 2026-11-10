@@ -26,6 +26,8 @@ final class ScoredResult
         public readonly ?string $region = null,
         public readonly ?int $ruleset_id = null,
         public readonly ?string $ruleset_name = null,
+        /** Counted only because the federation decided so - see SeasonScoring::scoresOnlyByDecision(). */
+        public readonly bool $on_decision = false,
     ) {}
 
     /** Orders results the way the points table reads, left to right. */

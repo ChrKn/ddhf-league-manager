@@ -476,7 +476,8 @@ class DataBrowser
                 $result->fencer?->display_name ?? '',
             ])
             ->map(fn (\App\Models\Result $result) => [
-                'placement'         => Placement::from((string) $result->placement)->label(),
+                'placement'         => Placement::from((string) $result->placement)->label()
+                    . ($result->withdrew() ? ' (Aufgabe)' : ''),
                 'fencer'            => $result->fencer?->display_name,
                 'group'             => $result->group?->name,
                 'fencer_group_name' => $result->fencer_group_name,
@@ -503,7 +504,13 @@ class DataBrowser
                 'Regelwerk'     => $tournament->ruleset?->name,
                 'Zone'          => Regions::label($tournament->region),
                 'Teilnehmende'  => $tournament->participant_count,
+                'Gemeldet'      => $tournament->registered_count,
                 'Punkteschlüssel' => $tournament->season?->scoring_matrix?->name,
+                'Gewertet ab'   => $tournament->season?->min_participants,
+                'Gewertet'      => $scoring === null ? null : ($scoring->scores($tournament) ? 'ja' : 'nein'),
+                'Auf Beschluss' => $tournament->isScoredOnDecision()
+                    ? trim(($tournament->decided_on?->format('d.m.Y') ?? '') . ': ' . $tournament->scored_on_decision, ': ')
+                    : null,
             ],
             'columns' => [
                 'placement'         => 'Platz',

@@ -473,6 +473,11 @@
         ul.used-in { margin: .5rem 0 0; padding-left: 1.1rem; font-size: .92rem; columns: 2 16rem; }
         ul.used-in .threshold { color: var(--muted); }
 
+        /* A tournament that counts on a decision of the federation, and a result given up. Quiet
+           on purpose - a note to whoever looks closer, not a warning. */
+        .decision { color: var(--muted); font-size: .84em; margin-left: .3em; cursor: help; }
+        .withdrew { color: var(--muted); font-size: .84em; }
+
         .note {
             background: var(--accent-soft);
             border: 1px solid var(--line);
@@ -706,6 +711,20 @@
                 button.focus();
             }
         });
+    })();
+
+    // --- announcements: open the one a link points at ---------------------------------------
+    // A tournament scored on a decision links to its announcement by anchor. Arriving at a closed
+    // heading would leave the reader to find the text themselves.
+    (function () {
+        function openTarget() {
+            var id = decodeURIComponent(location.hash.slice(1));
+            var target = id && document.getElementById(id);
+            if (target && target.tagName === 'DETAILS') target.open = true;
+        }
+
+        openTarget();
+        window.addEventListener('hashchange', openTarget);
     })();
 
     // --- filters: submit on change, so the button is only needed without a script -----------

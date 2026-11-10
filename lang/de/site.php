@@ -86,6 +86,8 @@ return [
         'new_long'         => 'neu in der Rangliste',
         'threshold'        => 'Gewertet ab',
         'threshold_value'  => ':count Angetretenen (Saisonregel)',
+        'on_decision'      => 'Gewertet auf Beschluss: weniger Angetretene, als die Saison verlangt. Begründung am Turnier.',
+        'on_decision_short' => 'auf Beschluss gewertet',
     ],
 
     'scoring' => [
@@ -119,6 +121,11 @@ return [
         'count'      => 'Ergebnisse',
         'of_total'   => 'von :total',
         'note'       => 'Punkte gelten nur für Mitglieder des DDHF; die Rangliste zeigt, wer davon gewertet wird.',
+        'field'      => ':registered gemeldet · :fenced angetreten',
+        'withdrew'   => 'Aufgabe',
+        'decision'   => 'Gewertet auf Beschluss vom :date:',
+        'decision_undated' => 'Gewertet auf Beschluss:',
+        'decision_link' => 'zur Meldung',
     ],
 
     'columns' => [

@@ -29,6 +29,8 @@ class SeasonExporter extends Exporter
             ExportColumn::make('scoring_mode')
                 ->formatStateUsing(fn(?ScoringMode $state) => $state?->value)
                 ->label('Auswertungssystem'),
+            ExportColumn::make('min_participants')
+                ->label('Gewertet ab Teilnehmenden'),
             ExportColumn::make('year')
                 ->label('Jahr'),
         ];

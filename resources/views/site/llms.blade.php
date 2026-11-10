@@ -20,3 +20,5 @@ Everything below is also available as JSON, one document per page, carrying exac
 ## How a standing is scored
 
 Each tournament awards points by placement and field size, from the season's points table. A standing adds those up according to its scoring mode: all points, the best zone, the best ruleset, or the best three tournaments. Results that did not count under that mode are listed with `"counts": false`. Equal points share a rank.
+
+`participants` is the field that fenced: everybody with at least one bout. `registered`, where given, is how many had registered and never enters a point. A season may score only from a minimum field; a tournament below it carries `"scored": false`, unless the federation decided to score it anyway, which `scored_on_decision` records with its date and grounds (points then still follow the field that fenced). A result with `"withdrew": true` was fenced and given up, and scores like any other.

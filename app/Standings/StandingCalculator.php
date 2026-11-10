@@ -91,6 +91,9 @@ final class StandingCalculator
             'placement_name' => Placement::from($result->placement)->label(),
             'points'        => $result->points,
             'counts'        => $score->counts($result),
+            // Below the season's threshold and counted on a decision of the federation. Said on
+            // every surface that lists the result, so it is never mistaken for one that made it.
+            'on_decision'   => $result->on_decision,
         ], $results);
     }
 
@@ -181,6 +184,7 @@ final class StandingCalculator
                     region: $tournament->region,
                     ruleset_id: $tournament->ruleset_id,
                     ruleset_name: $tournament->ruleset?->name,
+                    on_decision: $scoring->scoresOnlyByDecision($tournament),
                 );
             }
         }

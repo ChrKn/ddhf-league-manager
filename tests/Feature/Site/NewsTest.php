@@ -73,8 +73,8 @@ class NewsTest extends TestCase
             ->assertSee('Nur deutsch')
             ->getContent();
 
-        $this->assertMatchesRegularExpression('/<li\s+lang="de"\s*>\s*<details>\s*<summary>.*?Nur deutsch/s', $html);
-        $this->assertDoesNotMatchRegularExpression('/<li\s+lang="de"\s*>\s*<details>\s*<summary>.*?Translated/s', $html);
+        $this->assertMatchesRegularExpression('/<li\s+lang="de"\s*>\s*<details[^>]*>\s*<summary>.*?Nur deutsch/s', $html);
+        $this->assertDoesNotMatchRegularExpression('/<li\s+lang="de"\s*>\s*<details[^>]*>\s*<summary>.*?Translated/s', $html);
     }
 
     public function test_the_update_date_is_shown_only_when_one_was_set(): void

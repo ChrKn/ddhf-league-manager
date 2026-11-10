@@ -137,10 +137,16 @@ final class SeasonRanking
             $first = $group[0];
             $date = $first->held_from?->format(__('site.date_format'));
             $name = trim((string) ($first->event?->name ?: ($first->name ?: $first->display_name)));
+            $label = $date ? "{$date} · {$name}" : (string) $name;
+
+            // A step that only exists because of a decision says so where it is chosen.
+            if (array_filter($scored, fn (Tournament $tournament) => $scoring->scoresOnlyByDecision($tournament)) !== []) {
+                $label .= ' · ' . __('site.standing.on_decision_short');
+            }
 
             $steps[] = [
                 'key'            => (string) $key,
-                'label'          => $date ? "{$date} · {$name}" : (string) $name,
+                'label'          => $label,
                 'tournament_ids' => $so_far,
             ];
         }

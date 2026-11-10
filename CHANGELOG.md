@@ -4,7 +4,7 @@ Notable changes to the DDHF standings system.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).  
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.8.0 - 2026-11-10
+## 1.8.0 - 2026-11-14
 
 ### Added
 - A season can set its own threshold (`seasons.min_participants`, "Gewertet ab Teilnehmenden" in
@@ -20,6 +20,13 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   announcement). It lifts the season's threshold only: points come from the season's matrix at
   the field that fenced, and the matrix's own floor stays. Section "Wertung auf Beschluss" in the
   tournament form, with a warning where the registrations are missing.
+- The site shows "25 gemeldet · 22 angetreten" where the registrations are on record, the
+  decision with its date and grounds on the tournament (linked to its announcement while that is
+  shown), a quiet § mark on tournaments that count only on a decision, in the list of tournaments,
+  in a fencer's results and in the step a standing can be read at, and "Aufgabe" next to a result
+  given up. Announcements can be linked to and open when they are.
+- API, the JSON under `/data`, `llms.txt` and the exports carry `registered_count`/`registered`,
+  `scored`, `scored_on_decision`, `decided_on`, `withdrew` and the season's `min_participants`.
 
 ### Changed
 - Whether a tournament is scored is decided in one place, `SeasonScoring`, for the standing, its

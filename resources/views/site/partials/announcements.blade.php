@@ -12,7 +12,9 @@
 <ul class="news">
     @foreach ($announcements as $announcement)
         <li @if ($announcement['lang'] !== app()->getLocale()) lang="{{ $announcement['lang'] }}" @endif>
-            <details>
+            {{-- The anchor a tournament scored on a decision links to; see the layout's script,
+                 which opens the one it points at. --}}
+            <details id="{{ $announcement['anchor'] }}">
                 <summary>
                     <span class="when"><time datetime="{{ $announcement['datetime'] }}">{{ $announcement['date'] }}</time>@if ($announcement['revised']) · <time datetime="{{ $announcement['revised_time'] }}" lang="{{ app()->getLocale() }}">{{ __('site.news.revised', ['date' => $announcement['revised']]) }}</time>@endif</span>
                     <span class="headline">{{ $announcement['title'] }}</span>

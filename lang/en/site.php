@@ -90,6 +90,8 @@ return [
         'new_long'         => 'new in this standing',
         'threshold'        => 'Scored from',
         'threshold_value'  => ':count participants (season rule)',
+        'on_decision'      => 'Scored on decision: fewer participants than the season requires. Grounds on the tournament page.',
+        'on_decision_short' => 'scored on decision',
     ],
 
     'scoring' => [
@@ -123,6 +125,11 @@ return [
         'count'      => 'results',
         'of_total'   => 'of :total',
         'note'       => 'Points are awarded to members of the DDHF only; the standing shows which of them are scored.',
+        'field'      => ':registered registered · :fenced competed',
+        'withdrew'   => 'withdrew',
+        'decision'   => 'Scored on a decision of :date:',
+        'decision_undated' => 'Scored on decision:',
+        'decision_link' => 'see the notice',
     ],
 
     'columns' => [

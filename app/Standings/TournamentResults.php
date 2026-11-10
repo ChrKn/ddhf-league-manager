@@ -16,10 +16,10 @@ use App\Models\Tournament;
 final class TournamentResults
 {
     /** What has to be loaded on the tournament for this to run without N+1 queries. */
-    public const RELATIONS = ['season.scoring_matrix', 'results.fencer', 'results.group'];
+    public const RELATIONS = ['season.scoring_matrix', 'announcement', 'results.fencer', 'results.group'];
 
     /**
-     * @return list<array{placement: Placement, fencer: string|null, anonymized: bool, group: string|null, points: int|null}>
+     * @return list<array{placement: Placement, withdrew: bool, fencer: string|null, anonymized: bool, group: string|null, points: int|null}>
      */
     public static function for(Tournament $tournament): array
     {
@@ -40,6 +40,8 @@ final class TournamentResults
 
                 return [
                     'placement'  => Placement::from((string) $result->placement),
+                    // Fenced and gave up. Said next to the placement and nowhere in the points.
+                    'withdrew'   => $result->withdrew(),
                     'fencer'     => $result->fencer?->display_name,
                     'anonymized' => $anonymized,
                     // The club as the database names it, and nothing at all for an anonymised

@@ -2,6 +2,9 @@
 
 namespace Tests\Feature\Standings;
 
+use App\Filament\Exports\TournamentExporter;
+use App\Models\Announcement;
+use App\Models\ApiKey;
 use App\Models\Discipline;
 use App\Models\Division;
 use App\Models\Event;
@@ -18,6 +21,7 @@ use App\Standings\ScoringMode;
 use App\Standings\SeasonRanking;
 use App\Standings\SeasonScoring;
 use App\Standings\TournamentResults;
+use Filament\Actions\Exports\Models\Export;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -338,5 +342,127 @@ class SeasonThresholdTest extends TestCase
         $tournament = $this->tournament($season, 22, ['scored_on_decision' => '']);
 
         $this->assertFalse(SeasonScoring::of($season)->scores($tournament));
+    }
+
+    public function test_every_surface_reaches_the_same_verdict(): void
+    {
+        // Rangliste, Verlauf, Turnierseite, JSON, API und Export fragen alle SeasonScoring. Läuft
+        // einer davon auseinander, steht ein Turnier in der Tabelle und gilt auf seiner eigenen
+        // Seite als nicht gewertet - oder umgekehrt.
+        config(['site.indexable' => true]);
+        $key = ApiKey::create(['name' => 'Test', 'key' => str_repeat('K', 64)])->key;
+
+        $season = $this->season(25);
+        $decision = ['scored_on_decision' => 'Beschluss', 'decided_on' => '2026-11-01'];
+
+        $expected = [
+            'zu klein'                   => [$this->tournament($season, 22, ['registered_count' => 25]), false],
+            'auf Beschluss'              => [$this->tournament($season, 22, ['registered_count' => 25, ...$decision]), true],
+            'unter der Matrix-Untergrenze' => [$this->tournament($season, 3, $decision), false],
+            'an der Schwelle'            => [$this->tournament($season, 25), true],
+        ];
+
+        $loaded = $this->loaded($season);
+        $rows = SeasonRanking::for($loaded)['rows'];
+        $steps = array_column(SeasonRanking::steps($loaded), 'key');
+        $exporter = new TournamentExporter(new Export(), ['public_id' => 'ID', 'scored' => 'Gewertet'], []);
+
+        foreach ($expected as $case => [$tournament, $scored]) {
+            $tournament = Tournament::with(TournamentResults::RELATIONS)->find($tournament->id);
+
+            $inTable = 0;
+
+            foreach ($rows as $row) {
+                foreach ($row['results'] as $result) {
+                    if ($result['tournament_id'] === $tournament->public_id) {
+                        $inTable += $result['points'];
+                    }
+                }
+            }
+
+            $onItsPage = array_sum(array_column(TournamentResults::for($tournament), 'points'));
+
+            $this->assertSame($scored, $inTable > 0, "Rangliste: {$case}");
+            $this->assertSame($scored, in_array($tournament->event->public_id, $steps, true), "Verlauf: {$case}");
+            $this->assertSame($scored, $onItsPage > 0, "Turnierseite: {$case}");
+            $this->assertSame($inTable, $onItsPage, "Punkte Rangliste/Turnierseite: {$case}");
+            $this->assertSame($scored ? 'ja' : 'nein', $exporter($tournament)[1], "Export: {$case}");
+
+            $this->getJson("/data/tournaments/{$tournament->public_id}.json")
+                ->assertOk()
+                ->assertJsonPath('scored', $scored);
+
+            $this->withToken($key)
+                ->getJson("/api/tournaments/{$tournament->public_id}")
+                ->assertOk()
+                ->assertJsonPath('data.scored', $scored);
+        }
+    }
+
+    public function test_the_tournament_shows_registered_fenced_and_the_decision(): void
+    {
+        $season = $this->season(25);
+        $announcement = Announcement::create([
+            'title' => 'Langschwert-Turnier wird gewertet',
+            'body'  => 'Das Präsidium hat beschlossen …',
+        ]);
+        $tournament = $this->tournament($season, 22, [
+            'registered_count'   => 25,
+            'scored_on_decision' => 'Drei Absagen nach Meldeschluss, Präsidium hat zugestimmt.',
+            'decided_on'         => '2026-11-01',
+            'announcement_id'    => $announcement->id,
+        ]);
+        $tournament->results()->where('placement', '3')->update(['withdrew' => true]);
+
+        $this->get("/turniere/{$tournament->public_id}")
+            ->assertOk()
+            ->assertSee('25 gemeldet · 22 angetreten')
+            ->assertSee('Gewertet auf Beschluss vom 01.11.2026:')
+            ->assertSee('Drei Absagen nach Meldeschluss, Präsidium hat zugestimmt.')
+            ->assertSee('href="' . url('/meldungen') . '#meldung-' . $announcement->id . '"', false)
+            ->assertSee('· Aufgabe', false);
+
+        $this->get("/en/tournaments/{$tournament->public_id}")
+            ->assertOk()
+            ->assertSee('25 registered · 22 competed')
+            ->assertSee('Scored on a decision of 1 Nov 2026:');
+
+        $this->get('/meldungen')->assertSee('id="meldung-' . $announcement->id . '"', false);
+
+        $this->get('/turniere')
+            ->assertOk()
+            ->assertSee('25 gemeldet · 22 angetreten')
+            ->assertSee('class="decision"', false);
+    }
+
+    public function test_the_standing_marks_what_counts_only_on_a_decision(): void
+    {
+        $season = $this->season(25);
+        $this->tournament($season, 22, ['scored_on_decision' => 'Beschluss', 'decided_on' => '2026-11-01']);
+        $this->tournament($season, 30);
+
+        $html = $this->get("/ranglisten/{$season->public_id}")->assertOk()->getContent();
+
+        $this->assertSame(3, substr_count($html, 'class="decision"'));
+        $this->assertStringContainsString('Gewertet auf Beschluss: weniger Angetretene', $html);
+        $this->assertStringContainsString('auf Beschluss gewertet', $html);
+    }
+
+    public function test_an_announcement_no_longer_shown_is_not_linked(): void
+    {
+        $season = $this->season(25);
+        $announcement = Announcement::create(['title' => 'Alt', 'body' => 'Alt']);
+        $announcement->forceFill(['created_at' => now()->subMonths(13)])->save();
+
+        $tournament = $this->tournament($season, 22, [
+            'scored_on_decision' => 'Beschluss',
+            'decided_on'         => '2025-09-01',
+            'announcement_id'    => $announcement->id,
+        ]);
+
+        $this->get("/turniere/{$tournament->public_id}")
+            ->assertOk()
+            ->assertSee('Gewertet auf Beschluss vom 01.09.2025:')
+            ->assertDontSee('#meldung-', false);
     }
 }

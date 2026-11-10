@@ -253,6 +253,8 @@ class SiteController extends Controller
                 'date_sort'   => $tournament->held_from?->format('Y-m-d'),
                 'format'      => $tournament->format,
                 'participants' => (int) $tournament->participant_count,
+                'field'       => $this->fieldOf($tournament),
+                'on_decision' => $tournament->isScoredOnDecision(),
                 'results'     => (int) $tournament->results_count,
                 'href'        => SiteUrl::to('tournament', $tournament->public_id),
             ])->all(),
@@ -277,6 +279,7 @@ class SiteController extends Controller
 
         $results = array_map(fn (array $result) => [
             'placement' => $result['placement']->label(App::getLocale()),
+            'withdrew'  => $result['withdrew'],
             // The order the table itself reads in: ranks, then rounds from the latest to the
             // earliest, then the pools. "4tel Finale" sorted as text lands under 4.
             'placement_sort' => $result['placement']->sortKey(),
@@ -299,8 +302,9 @@ class SiteController extends Controller
                 __('site.columns.discipline') => $tournament->season?->standing?->discipline?->name,
                 __('site.columns.division')   => $tournament->season?->standing?->division?->name,
                 __('site.columns.format')     => $tournament->format,
-                __('site.columns.participants') => $tournament->participant_count,
+                __('site.columns.participants') => $this->fieldOf($tournament),
             ], fn ($value) => $value !== null && $value !== ''),
+            'decision' => $this->decisionOf($tournament),
             'standing' => $tournament->season
                 ? SiteUrl::to('standing', $tournament->season->public_id)
                 : null,
@@ -443,6 +447,7 @@ class SiteController extends Controller
             ->when($limit, fn ($query, $limit) => $query->limit($limit))
             ->get()
             ->map(fn (Announcement $announcement) => [
+                'anchor'       => self::anchorOf($announcement),
                 'title'        => $announcement->titleFor($locale),
                 'html'         => $announcement->bodyHtmlFor($locale),
                 'lang'         => $announcement->languageFor($locale),
@@ -452,6 +457,57 @@ class SiteController extends Controller
                 'revised_time' => $announcement->revised_at?->copy()->setTimezone($zone)->toAtomString(),
             ])
             ->all();
+    }
+
+    /**
+     * The field, and how many had registered where that is on record: "25 gemeldet · 22
+     * angetreten". The two numbers are what a decision to score a short field rests on, so they
+     * are shown where anybody can check them. Who did not fence, or why, is not on record at all.
+     */
+    private function fieldOf(Tournament $tournament): ?string
+    {
+        if ($tournament->participant_count === null) {
+            return null;
+        }
+
+        if ($tournament->registered_count === null) {
+            return (string) $tournament->participant_count;
+        }
+
+        return __('site.tournament.field', [
+            'registered' => $tournament->registered_count,
+            'fenced'     => $tournament->participant_count,
+        ]);
+    }
+
+    /**
+     * The federation's decision to score this tournament, as the page prints it. The grounds are
+     * the federation's own words and stay German in both languages, like every value from the
+     * database. The announcement is linked only while the news page still shows it.
+     *
+     * @return array{date: string|null, grounds: string, href: string|null}|null
+     */
+    private function decisionOf(Tournament $tournament): ?array
+    {
+        if (!$tournament->isScoredOnDecision()) {
+            return null;
+        }
+
+        $announcement = $tournament->announcement;
+
+        return [
+            'date'    => $tournament->decided_on?->format(__('site.date_format')),
+            'grounds' => (string) $tournament->scored_on_decision,
+            'href'    => $announcement?->isShown()
+                ? SiteUrl::to('news') . '#' . self::anchorOf($announcement)
+                : null,
+        ];
+    }
+
+    /** Where an announcement sits on the news page. Its record id, which says nothing to a reader. */
+    private static function anchorOf(Announcement $announcement): string
+    {
+        return 'meldung-' . $announcement->id;
     }
 
     private function dateOf(Tournament $tournament): ?string

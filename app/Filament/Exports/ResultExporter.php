@@ -27,6 +27,9 @@ class ResultExporter extends Exporter
                 ->label('Gruppe'),
             ExportColumn::make('placement')
                 ->label('Platzierung'),
+            ExportColumn::make('withdrew')
+                ->label('Aufgabe')
+                ->formatStateUsing(fn ($state) => $state ? 'ja' : 'nein'),
         ];
     }
 

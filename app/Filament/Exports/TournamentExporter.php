@@ -3,6 +3,7 @@
 namespace App\Filament\Exports;
 
 use App\Models\Tournament;
+use App\Standings\SeasonScoring;
 use Filament\Actions\Exports\ExportColumn;
 use Filament\Actions\Exports\Exporter;
 use Filament\Actions\Exports\Models\Export;
@@ -20,7 +21,19 @@ class TournamentExporter extends Exporter
             ExportColumn::make('name')
                 ->label('Name'),
             ExportColumn::make('participant_count')
-                ->label('Anzahl Teilnehmende'),
+                ->label('Anzahl Teilnehmende (angetreten)'),
+            ExportColumn::make('registered_count')
+                ->label('Gemeldet'),
+            // Worked out where the standing works it out, so the file and the table cannot
+            // disagree about which tournaments counted.
+            ExportColumn::make('scored')
+                ->label('Gewertet')
+                ->state(fn (Tournament $record) => self::scored($record) ? 'ja' : 'nein'),
+            ExportColumn::make('scored_on_decision')
+                ->label('Gewertet auf Beschluss'),
+            ExportColumn::make('decided_on')
+                ->label('Beschlossen am')
+                ->formatStateUsing(fn ($state) => $state?->toDateString()),
             ExportColumn::make('event.public_id')
                 ->label('Veranstaltung-ID'),
             ExportColumn::make('event.name')
@@ -36,6 +49,11 @@ class TournamentExporter extends Exporter
             ExportColumn::make('region')
                 ->label('Region'),
         ];
+    }
+
+    public static function scored(Tournament $tournament): bool
+    {
+        return (bool) SeasonScoring::of($tournament->season)?->scores($tournament);
     }
 
     public static function getCompletedNotificationBody(Export $export): string

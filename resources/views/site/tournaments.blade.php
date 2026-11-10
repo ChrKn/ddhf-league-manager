@@ -22,10 +22,15 @@
                     <tr>
                         {{-- Name and format are database values and stay German in both
                              languages; the format is an entry of the list kept in the panel. --}}
-                        <td><a href="{{ $row['href'] }}">{{ $row['name'] }}</a></td>
+                        <td>
+                            <a href="{{ $row['href'] }}">{{ $row['name'] }}</a>
+                            @if ($row['on_decision'])
+                                @include('site.partials.decision-mark')
+                            @endif
+                        </td>
                         <td data-sort="{{ $row['date_sort'] ?? '' }}">{{ $row['date'] ?? '—' }}</td>
                         <td>{{ $row['format'] ?? '—' }}</td>
-                        <td class="num">{{ $row['participants'] ?: '—' }}</td>
+                        <td class="num" data-sort="{{ $row['participants'] }}">{{ $row['participants'] ? $row['field'] : '—' }}</td>
                     </tr>
                 @empty
                     <tr>

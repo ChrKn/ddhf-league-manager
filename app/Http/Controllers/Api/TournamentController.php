@@ -18,6 +18,8 @@ class TournamentController extends Controller
                 'ruleset',
                 'season.standing.discipline',
                 'season.standing.division',
+                // For whether it is scored, which is answered as the standing answers it.
+                'season.scoring_matrix',
                 // fencer.group only covers the few results that predate fencer_group_name.
                 'results.fencer.group',
             ])

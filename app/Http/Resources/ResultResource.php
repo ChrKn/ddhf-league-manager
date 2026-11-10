@@ -32,6 +32,8 @@ class ResultResource extends JsonResource
             // should read placement_name, which is that in German.
             'placement'      => $placement->value,
             'placement_name' => $placement->label(),
+            // Fenced and gave up. The placement is where they went out and scores as it is.
+            'withdrew'       => (bool) $this->withdrew,
             'fencer'    => [
                 'id'    => $anonymized ? null : $fencer?->public_id,
                 'name'  => $anonymized ? Fencer::ANONYMOUS_NAME : $fencer?->display_name,

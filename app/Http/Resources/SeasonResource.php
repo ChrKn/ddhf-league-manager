@@ -25,6 +25,8 @@ class SeasonResource extends JsonResource
             'division'     => $this->standing?->division?->name,
             'standing_id'  => $this->standing?->public_id,
             'scoring_mode' => $this->scoring_mode?->value,
+            // The smallest field the season scores, where it sets one; null leaves it to the matrix.
+            'min_participants' => $this->min_participants,
         ];
     }
 }

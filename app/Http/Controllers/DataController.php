@@ -6,6 +6,7 @@ use App\Models\Season;
 use App\Models\Tournament;
 use App\Standings\Placement;
 use App\Standings\SeasonRanking;
+use App\Standings\SeasonScoring;
 use App\Standings\TournamentResults;
 use App\Support\SiteUrl;
 use Illuminate\Http\JsonResponse;
@@ -95,6 +96,7 @@ class DataController extends Controller
                     'placement'  => $this->placement(Placement::from($result['placement'])),
                     'points'     => $result['points'],
                     'counts'     => $result['counts'],
+                    'on_decision' => $result['on_decision'],
                 ], $row['results']),
             ], $ranking['rows']),
         ]);
@@ -124,6 +126,8 @@ class DataController extends Controller
                 'year'         => $tournament->season ? (int) $tournament->season->year : null,
                 'format'       => $tournament->format,
                 'participants' => (int) $tournament->participant_count,
+                'registered'   => $tournament->registered_count,
+                'scored_on_decision' => $this->decision($tournament),
                 'results'      => (int) $tournament->results_count,
                 ...$this->links('tournament', $tournament->public_id),
             ])->all(),
@@ -148,6 +152,10 @@ class DataController extends Controller
             'division'     => $tournament->season?->standing?->division?->name,
             'format'       => $tournament->format,
             'participants' => $tournament->participant_count,
+            // Evidence for a decision, never part of a point. See SeasonScoring.
+            'registered'   => $tournament->registered_count,
+            'scored'       => (bool) SeasonScoring::of($tournament->season)?->scores($tournament),
+            'scored_on_decision' => $this->decision($tournament),
             'standing'     => $tournament->season ? [
                 'name' => $tournament->season->standing?->display_name,
                 'year' => (int) $tournament->season->year,
@@ -155,6 +163,7 @@ class DataController extends Controller
             ] : null,
             'results'      => array_map(fn (array $result) => [
                 'placement'  => $this->placement($result['placement']),
+                'withdrew'   => $result['withdrew'],
                 'name'       => $result['fencer'],
                 'anonymized' => $result['anonymized'],
                 'group'      => $result['group'],
@@ -206,6 +215,19 @@ class DataController extends Controller
             ],
             'json' => route("data.{$page}", $publicId),
         ];
+    }
+
+    /**
+     * The federation's decision to score a tournament below the threshold, or null for none.
+     *
+     * @return array{decided_on: string|null, grounds: string}|null
+     */
+    private function decision(Tournament $tournament): ?array
+    {
+        return $tournament->isScoredOnDecision() ? [
+            'decided_on' => $tournament->decided_on?->toDateString(),
+            'grounds'    => (string) $tournament->scored_on_decision,
+        ] : null;
     }
 
     /** @return array{code: string, de: string, en: string} */

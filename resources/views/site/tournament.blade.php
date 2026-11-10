@@ -22,6 +22,19 @@
         </dl>
     </div>
 
+    @if ($decision)
+        {{-- The grounds are the federation's own words, German in both languages. --}}
+        <div class="note">
+            <strong>{{ $decision['date']
+                ? __('site.tournament.decision', ['date' => $decision['date']])
+                : __('site.tournament.decision_undated') }}</strong>
+            <span lang="de">{{ $decision['grounds'] }}</span>
+            @if ($decision['href'])
+                · <a href="{{ $decision['href'] }}">{{ __('site.tournament.decision_link') }}</a>
+            @endif
+        </div>
+    @endif
+
     @include('site.partials.filters', ['filters' => $filters, 'target' => 'ergebnisse'])
 
     <div class="panel">
@@ -41,7 +54,7 @@
                 <tbody>
                 @forelse ($rows as $row)
                     <tr>
-                        <td class="rank" data-sort="{{ $row['placement_sort'] }}">{{ $row['placement'] }}</td>
+                        <td class="rank" data-sort="{{ $row['placement_sort'] }}">{{ $row['placement'] }}@if ($row['withdrew']) <span class="withdrew">· {{ __('site.tournament.withdrew') }}</span>@endif</td>
                         <td>{{ $row['fencer'] ?? '—' }}</td>
                         <td>{{ $row['group'] ?? '—' }}</td>
                         <td class="num points">{{ $row['points'] ?? '—' }}</td>
